@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Menu,
   X,
@@ -20,24 +21,12 @@ import {
   Zap,
 } from "lucide-react";
 
+// 🌟 Main Landing Page Component
 export default function LandingPage() {
+  // Navbar scroll + mobile menu logic
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [counts, setCounts] = useState([0, 0, 0, 0]);
-
-  // Load Spline Viewer
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.type = 'module';
-    script.src = 'https://unpkg.com/@splinetool/viewer@1.10.77/build/spline-viewer.js';
-    document.head.appendChild(script);
-
-    return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -45,6 +34,7 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Stats animation
   const stats = [
     { value: 5000, suffix: "+", label: "Active Members" },
     { value: 150, suffix: "+", label: "Communities" },
@@ -75,9 +65,9 @@ export default function LandingPage() {
   }, []);
 
   const navLinks = [
-    { name: "About", href: "#about" },
-    { name: "Features", href: "#features" },
-    { name: "Stats", href: "#stats" },
+    { name: "About", href: "/about" },
+    { name: "Blogs", href: "/blogs" },
+    { name: "Events", href: "/events" },
   ];
 
   const features = [
@@ -130,7 +120,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Navbar */}
+      {/* 🔹 Navbar */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           isScrolled
@@ -140,32 +130,29 @@ export default function LandingPage() {
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <a href="#home" className="flex items-center space-x-3">
+            <Link to="/" className="flex items-center space-x-3">
               <div className="bg-gradient-to-br from-violet-500 to-fuchsia-500 p-2 rounded-lg">
                 <Users className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
                 Spectra
               </span>
-            </a>
+            </Link>
 
             <div className="hidden md:flex items-center space-x-8">
               {navLinks.map((l) => (
-                <a
+                <Link
                   key={l.name}
-                  href={l.href}
+                  to={l.href}
                   className="text-gray-300 hover:text-white relative group"
                 >
                   {l.name}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 group-hover:w-full transition-all duration-300"></span>
-                </a>
+                </Link>
               ))}
-              <a
-                href="#signup"
-                className="bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-2.5 rounded-full font-semibold hover:scale-105 transition-all duration-300"
-              >
+              <Link to="/signup" className="bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-2.5 rounded-full font-semibold hover:scale-105 transition-all duration-300">
                 Join Now
-              </a>
+              </Link>
             </div>
 
             <button
@@ -181,73 +168,51 @@ export default function LandingPage() {
           <div className="md:hidden bg-black/95 backdrop-blur-lg border-t border-white/10">
             <div className="px-6 py-6 space-y-4">
               {navLinks.map((l) => (
-                <a
+                <Link
                   key={l.name}
-                  href={l.href}
+                  to={l.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block text-gray-300 hover:text-white text-lg"
                 >
                   {l.name}
-                </a>
+                </Link>
               ))}
-              <a
-                href="#signup"
-                className="w-full text-center block bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-3 rounded-full font-semibold"
-              >
+              <Link to="/signup" className="w-full text-center block bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-3 rounded-full font-semibold">
                 Join Now
-              </a>
+              </Link>
             </div>
           </div>
         )}
       </nav>
 
-      {/* Hero with 3D Spline */}
+      {/* 🔹 Hero */}
       <section id="home" className="relative h-screen w-full overflow-hidden">
-        <div 
-          className="absolute inset-0 z-0"
-          dangerouslySetInnerHTML={{
-            __html: `<spline-viewer url="https://prod.spline.design/pGTmnyODrLdIi9om/scene.splinecode" style="width: 100%; height: 100%; border: none;"></spline-viewer>`
-          }}
-        />
+        <div className="absolute inset-0 z-0">
+          <spline-viewer url="https://prod.spline.design/pGTmnyODrLdIi9om/scene.splinecode"></spline-viewer>
+        </div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/70 z-10"></div>
         <div className="relative z-20 h-full flex flex-col justify-center items-center text-center px-6 max-w-6xl mx-auto">
-          <div className="mb-6 inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-6 py-2">
-            <Sparkles className="w-4 h-4 text-violet-400" />
-            <span className="text-sm font-medium text-gray-200">
-              Welcome to the Future of Community
-            </span>
-          </div>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight">
-            <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-violet-400 bg-clip-text text-transparent">
-              Spectra Community
-            </span>
-          </h1>
-          <p className="text-lg md:text-2xl text-gray-300 mb-10 max-w-3xl">
-            Connect. Collaborate. Create. Join the most vibrant platform where
-            students and innovators come together.
-          </p>
-          <div className="flex gap-4 flex-wrap justify-center">
-            <a
-              href="#signup"
-              className="bg-gradient-to-r from-violet-600 to-fuchsia-600 px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition"
-            >
-              Get Started
-            </a>
-            <a
-              href="#about"
-              className="bg-white/10 px-8 py-4 rounded-full font-bold text-lg hover:bg-white/20 transition"
-            >
-              Learn More
-            </a>
-          </div>
+            <div className="mb-6 inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-6 py-2 animate-float">
+                <Sparkles className="w-4 h-4 text-violet-400" />
+                <span className="text-sm font-medium text-gray-200">Welcome to the Future of Community</span>
+            </div>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight">
+                <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-violet-400 bg-clip-text text-transparent animate-gradient">
+                    Spectra Community
+                </span>
+            </h1>
+            <p className="text-lg md:text-2xl text-gray-300 mb-10 max-w-3xl">
+                Connect. Collaborate. Create. Join the most vibrant platform where students and innovators come together.
+            </p>
+            <div className="flex gap-4 flex-wrap justify-center">
+                <Link to="/signup" className="bg-gradient-to-r from-violet-600 to-fuchsia-600 px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition">Get Started</Link>
+                <Link to="/about" className="bg-white/10 px-8 py-4 rounded-full font-bold text-lg hover:bg-white/20 transition">Learn More</Link>
+            </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section
-        id="features"
-        className="py-24 px-6 bg-gradient-to-b from-black via-gray-900 to-black"
-      >
+      {/* 🔹 Features */}
+      <section className="py-24 px-6 bg-gradient-to-b from-black via-gray-900 to-black">
         <h2 className="text-5xl font-black text-center mb-16">
           <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
             Powerful Features
@@ -271,8 +236,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Stats */}
-      <section id="stats" className="py-20 px-6 bg-black">
+      {/* 🔹 Stats */}
+      <section className="py-20 px-6 bg-black">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
           {stats.map((s, i) => (
             <div key={i} className="text-center">
@@ -288,11 +253,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section
-        id="signup"
-        className="py-24 px-6 bg-gradient-to-br from-violet-600 via-fuchsia-600 to-purple-700 text-center"
-      >
+      {/* 🔹 CTA */}
+      <section className="py-24 px-6 bg-gradient-to-br from-violet-600 via-fuchsia-600 to-purple-700 text-center">
         <h2 className="text-5xl font-black mb-6 text-white">
           Ready to Join the Revolution?
         </h2>
@@ -310,15 +272,12 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
-        <a
-          href="#home"
-          className="inline-flex items-center bg-white text-violet-700 px-10 py-5 rounded-full font-bold text-lg hover:scale-105 transition-all"
-        >
-          Start Your Journey <ArrowRight className="ml-2" />
-        </a>
+        <Link to="/signup" className="bg-white text-violet-700 px-10 py-5 rounded-full font-bold text-lg hover:scale-105 transition-all">
+          Start Your Journey <ArrowRight className="inline ml-2" />
+        </Link>
       </section>
 
-      {/* Footer */}
+      {/* 🔹 Footer */}
       <footer className="bg-black border-t border-white/10 py-16 px-6 text-gray-400">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <div>
@@ -338,15 +297,12 @@ export default function LandingPage() {
 
           <div>
             <h3 className="text-white font-bold mb-4">Quick Links</h3>
-            <ul className="space-y-2">
-              {["About", "Features", "Stats", "Contact"].map((l) => (
+            <ul>
+              {["About", "Blogs", "Events", "Contact"].map((l) => (
                 <li key={l}>
-                  <a
-                    href={`#${l.toLowerCase()}`}
-                    className="hover:text-violet-400"
-                  >
+                  <Link to={`/${l.toLowerCase()}`} className="hover:text-violet-400">
                     {l}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -372,12 +328,10 @@ export default function LandingPage() {
             <h3 className="text-white font-bold mb-4">Follow Us</h3>
             <div className="flex space-x-4">
               {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                <a
-                  href="#"
-                  key={i}
-                  className="hover:text-violet-400 cursor-pointer"
-                >
-                  <Icon className="w-5 h-5" />
+                <a href="#" key={i} className="hover:text-violet-400 cursor-pointer">
+                  <Icon
+                    className="w-5 h-5"
+                  />
                 </a>
               ))}
             </div>
