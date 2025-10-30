@@ -86,12 +86,6 @@ const Home = () => {
               >
                 Get Started
               </Link>
-              <Link 
-                to="/events" 
-                className="bg-purple-700 text-white px-8 py-3 rounded-lg font-bold hover:bg-purple-800 transition border-2 border-white"
-              >
-                Explore Events
-              </Link>
             </div>
           </div>
         </div>
@@ -129,23 +123,6 @@ const Home = () => {
               <h3 className="text-xl font-bold mb-3">Share Knowledge</h3>
               <p className="text-gray-600">Read and write blogs to share your experiences and learnings</p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Events */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">Featured Events</h2>
-            <Link to="/events" className="text-purple-600 hover:text-purple-700 font-medium">
-              View All →
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {featuredEvents.map(event => (
-              <EventCard key={event.id} event={event} />
-            ))}
           </div>
         </div>
       </section>

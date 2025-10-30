@@ -31,8 +31,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 const AppLayout = () => {
   const location = useLocation();
-  // The new LandingPage is self-contained, so we don't show the global Navbar/Footer on the root path.
-  const showLayout = location.pathname !== '/';
+  // Define paths where the main Navbar and Footer should be hidden.
+  const noLayoutPaths = ['/', '/login', '/signup'];
+  // The LandingPage, Login, Signup, and all dashboard pages are self-contained,
+  // so we don't show the global Navbar/Footer on them.
+  const showLayout = !noLayoutPaths.includes(location.pathname) && !location.pathname.startsWith('/member/dashboard') && !location.pathname.startsWith('/club/dashboard') && !location.pathname.startsWith('/admin/dashboard');
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
