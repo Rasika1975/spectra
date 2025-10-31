@@ -2,6 +2,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import { Toaster } from "react-hot-toast";
 import Footer from "./components/Footer";
 
 // Public Pages
@@ -39,6 +40,7 @@ const AppLayout = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+      <Toaster position="top-right" />
       {showLayout && <Navbar />}
       <main className="flex-grow">
         <Routes>
