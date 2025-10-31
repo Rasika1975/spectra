@@ -1,28 +1,80 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Spline from '@splinetool/react-spline';
+import { API_ENDPOINTS, API_CONFIG } from '../config/api';
 
 const Signup = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState('member');
   const navigate = useNavigate();
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       alert("Passwords don't match!");
       return;
     }
-    // Mock signup logic
-    console.log('Signing up with:', { name, email, password });
-    // In a real app, you'd make an API call here.
-    // For now, let's just log in as a new member.
-    const user = { email, role: 'member' };
-    localStorage.setItem('user', JSON.stringify(user));
-    localStorage.setItem('token', 'fake-new-member-token');
-    navigate('/member/dashboard');
+
+    console.log('Attempting signup with:', { name, email, password, role });
+
+    try {
+      const response = await fetch(API_ENDPOINTS.SIGNUP, {
+        method: 'POST',
+        ...API_CONFIG,
+        body: JSON.stringify({
+          fullName: name,
+          email,
+          password,
+          role
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Signup response:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to sign up');
+      }
+
+      // Store user data
+      const userData = {
+        ...data.user,
+        role: role // ensure role is included
+      };
+      console.log('Storing user data:', userData);
+      
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('token', data.token);
+
+      // Navigate based on role
+      let dashboardPath;
+      switch (role) {
+        case 'member':
+          dashboardPath = '/member/dashboard';
+          break;
+        case 'club':
+          dashboardPath = '/club/dashboard';
+          break;
+        case 'admin':
+          dashboardPath = '/admin/dashboard';
+          break;
+        default:
+          dashboardPath = '/';
+      }
+      
+      console.log('Navigating to:', dashboardPath);
+      navigate(dashboardPath, { replace: true });
+    } catch (error) {
+      console.error('Signup error:', error);
+      if (error.name === 'NetworkError' || !window.navigator.onLine) {
+        alert('Network error. Please check your internet connection and make sure the server is running.');
+      } else {
+        alert(error.message || 'An error occurred during signup');
+      }
+    }
   };
 
   return (
@@ -105,6 +157,50 @@ const Signup = () => {
                 className="appearance-none relative block w-full px-4 py-3 border border-cyan-500/30 placeholder-gray-500 text-white bg-black/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 sm:text-sm transition-all"
                 placeholder="Confirm Password"
               />
+            </div>
+            <div className="flex gap-4 justify-center mt-4">
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  id="member"
+                  name="role"
+                  value="member"
+                  checked={role === 'member'}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300"
+                />
+                <label htmlFor="member" className="ml-2 block text-sm text-gray-300">
+                  Member
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  id="club"
+                  name="role"
+                  value="club"
+                  checked={role === 'club'}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300"
+                />
+                <label htmlFor="club" className="ml-2 block text-sm text-gray-300">
+                  Club
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  id="admin"
+                  name="role"
+                  value="admin"
+                  checked={role === 'admin'}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300"
+                />
+                <label htmlFor="admin" className="ml-2 block text-sm text-gray-300">
+                  Admin
+                </label>
+              </div>
             </div>
           </div>
 
