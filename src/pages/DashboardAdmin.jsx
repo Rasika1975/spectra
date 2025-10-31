@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Spline from '@splinetool/react-spline';
 import {
   LayoutDashboard,
   Users,
@@ -975,12 +976,22 @@ const DashboardAdmin = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-black text-white font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-violet-950 text-white relative font-sans">
+      {/* Background Spline and Glow Effects */}
+      <div className="fixed inset-0 z-0 opacity-30">
+        <Spline scene="https://prod.spline.design/GY9dYJg6o7hSFA5E/scene.splinecode" />
+      </div>
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-violet-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="relative z-10 flex min-h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-black text-slate-200 flex flex-col shadow-2xl border-r border-white/10">
+      <aside className="w-64 bg-black/40 backdrop-blur-xl text-slate-200 flex flex-col shadow-2xl border-r border-blue-500/20">
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-violet-500 to-fuchsia-500 p-2 rounded-lg"> 
+            <div className="bg-gradient-to-br from-blue-500 to-violet-500 p-2 rounded-lg shadow-lg shadow-blue-500/50">
               <LayoutDashboard className="w-6 h-6" />
             </div>
             <div>
@@ -1014,7 +1025,7 @@ const DashboardAdmin = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto bg-black/20">
         <div className="max-w-screen-2xl mx-auto p-6 md:p-8">
           {renderSection()}
         </div>
@@ -1188,6 +1199,7 @@ const DashboardAdmin = () => {
           )}
         </Modal>
       )}
+      </div>
     </div>
   );
 };
