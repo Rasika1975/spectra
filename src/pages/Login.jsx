@@ -2,14 +2,18 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Spline from '@splinetool/react-spline';
 import { API_ENDPOINTS, API_CONFIG } from '../config/api';
+import otpService from '../services/otpService';
+import OTPVerification from '../components/OTPVerification';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('member');
+  const [showOTPVerification, setShowOTPVerification] = useState(false);
+  const [loginData, setLoginData] = useState(null);
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleInitialLogin = async (e) => {
     e.preventDefault();
     console.log('Attempting login with:', { email, password, role });
     
@@ -20,26 +24,48 @@ const Login = () => {
         body: JSON.stringify({
           email,
           password,
-          role
+          role,
+          requireOTP: true // Tell backend to expect OTP verification
         }),
       });
 
       const data = await response.json();
-      console.log('Login response:', data);
+      console.log('Initial login response:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to login');
       }
 
-      // Store user data
-      const userData = {
-        ...data.user,
-        role: role // ensure role is included
-      };
+  // Store temporary login data and show OTP verification
+  setLoginData(data);
+  setShowOTPVerification(true);
+    } catch (error) {
+      console.error('Login error:', error);
+      if (error.name === 'NetworkError' || !window.navigator.onLine) {
+        alert('Network error. Please check your internet connection and make sure the server is running.');
+      } else {
+        alert(error.message || 'An error occurred during login');
+      }
+    }
+  };
+
+  const handleOTPVerified = async (verificationData) => {
+    try {
+      // After OTP is verified, request the final token (complete signin)
+      const response = await fetch(API_ENDPOINTS.SIGNIN, {
+        method: 'POST',
+        ...API_CONFIG,
+        body: JSON.stringify({ email, password, role, requireOTP: false })
+      });
+
+      const finalData = await response.json();
+      if (!response.ok) throw new Error(finalData.message || 'Failed to complete login');
+
+      const userData = { ...finalData.user, role };
       console.log('Storing user data:', userData);
-      
+
       localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('token', finalData.token);
 
       // Navigate based on role
       let dashboardPath;
@@ -50,9 +76,6 @@ const Login = () => {
         case 'club':
           dashboardPath = '/club/dashboard';
           break;
-        case 'admin':
-          dashboardPath = '/admin/dashboard';
-          break;
         default:
           dashboardPath = '/';
       }
@@ -60,14 +83,24 @@ const Login = () => {
       console.log('Navigating to:', dashboardPath);
       navigate(dashboardPath);
     } catch (error) {
-      console.error('Login error:', error);
-      if (error.name === 'NetworkError' || !window.navigator.onLine) {
-        alert('Network error. Please check your internet connection and make sure the server is running.');
-      } else {
-        alert(error.message || 'An error occurred during login');
-      }
+      console.error('OTP verification error:', error);
+      alert(error.message || 'Failed to verify OTP');
     }
   };
+
+  if (showOTPVerification) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-violet-950">
+        <OTPVerification
+          contactInfo={email}
+          purpose="login"
+          method="email"
+          onVerificationComplete={handleOTPVerified}
+          onBack={() => setShowOTPVerification(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-violet-950 text-white py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -90,7 +123,7 @@ const Login = () => {
             </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+        <form className="mt-8 space-y-6" onSubmit={handleInitialLogin}>
           <div className="space-y-4">
             <div>
               <label htmlFor="email-address" className="sr-only">Email address</label>
@@ -120,7 +153,7 @@ const Login = () => {
                 placeholder="Password"
               />
             </div>
-            <div className="flex gap-4">
+            <div className="flex justify-center gap-8">
               <div className="flex items-center">
                 <input
                   type="radio"
@@ -149,20 +182,11 @@ const Login = () => {
                   Club
                 </label>
               </div>
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  id="admin"
-                  name="role"
-                  value="admin"
-                  checked={role === 'admin'}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="h-4 w-4 text-violet-600 focus:ring-violet-500 border-gray-300"
-                />
-                <label htmlFor="admin" className="ml-2 block text-sm text-gray-300">
-                  Admin
-                </label>
-              </div>
+            </div>
+            <div className="text-center text-sm text-gray-400">
+              <Link to="/admin-login" className="font-medium text-violet-400 hover:text-violet-300 transition-colors">
+                Admin Login
+              </Link>
             </div>
           </div>
 

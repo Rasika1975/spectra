@@ -11,6 +11,8 @@ import About from "./pages/About";
 import LandingPage from "./pages/LandingPage";
 import Blogs from "./pages/Blogs";
 import BlogDetail from "./pages/BlogDetail";
+import Clubs from "./pages/Clubs";
+import ClubDetail from "./pages/ClubDetail";
 import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetail";
 import Contact from "./pages/Contact";
@@ -20,6 +22,8 @@ import VisionMission from "./pages/VisionMission";
 // Auth
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import AdminLogin from "./pages/AdminLogin";
+import AdminSignup from "./pages/AdminSignup";
 
 // Dashboards
 import DashboardMember from "./pages/DashboardMember";
@@ -50,6 +54,8 @@ const AppLayout = () => {
           <Route path="/about" element={<About />} />
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/blogs/:id" element={<BlogDetail />} />
+          <Route path="/clubs" element={<Clubs />} />
+          <Route path="/clubs/:id" element={<ClubDetail />} />
           <Route path="/events" element={<Events />} />
           <Route path="/events/:id" element={<EventDetail />} />
           <Route path="/contact" element={<Contact />} />
@@ -59,10 +65,12 @@ const AppLayout = () => {
           {/* 🔐 Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/admin-signup" element={<AdminSignup />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
 
           {/* 👥 Protected Routes */}
           <Route
-            path="/member/dashboard"
+            path="/member/dashboard/*"
             element={
               <ProtectedRoute allowedRole="member">
                 <DashboardMember />
@@ -70,7 +78,7 @@ const AppLayout = () => {
             }
           />
           <Route
-            path="/club/dashboard"
+            path="/club/dashboard/*"
             element={
               <ProtectedRoute allowedRole="club">
                 <DashboardClub />
@@ -78,7 +86,7 @@ const AppLayout = () => {
             }
           />
           <Route
-            path="/admin/dashboard"
+            path="/admin/dashboard/*"
             element={
               <ProtectedRoute allowedRole="admin">
                 <DashboardAdmin />

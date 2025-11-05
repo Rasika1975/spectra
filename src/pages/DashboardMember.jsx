@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from 'react-hot-toast'; // Add this for notifications
+import { toast } from 'react-hot-toast';
 import Spline from '@splinetool/react-spline';
+import memberApi from '../services/memberApi';
 import {
   LayoutDashboard,
   Users,
@@ -140,26 +141,16 @@ const DashboardMember = () => {
         return;
       }
 
-      const response = await fetch('/api/events/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ eventId })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setRegisteredEvents(prev => ({
-          ...prev,
-          pending: [...prev.pending, eventId]
-        }));
-        toast.success("Registration successful!");
-      } else {
-        throw new Error(data.message);
-      }
+      const response = await memberApi.registerForEvent(eventId);
+      setRegisteredEvents(prev => ({
+        ...prev,
+        pending: [...prev.pending, eventId]
+      }));
+      toast.success(response.message || "Registration successful!");
+      
+      // Refresh events list
+      const updatedEvents = await memberApi.getRegisteredEvents();
+      setRegisteredEvents(updatedEvents);
     } catch (error) {
       toast.error(error.message || "Failed to register for event");
     }
@@ -174,26 +165,16 @@ const DashboardMember = () => {
         return;
       }
 
-      const response = await fetch('/api/clubs/join', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ clubId })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setClubMemberships(prev => ({
-          ...prev,
-          pending: [...prev.pending, clubId]
-        }));
-        toast.success("Join request sent successfully!");
-      } else {
-        throw new Error(data.message);
-      }
+      const response = await memberApi.requestToJoinClub(clubId);
+      setClubMemberships(prev => ({
+        ...prev,
+        pending: [...prev.pending, clubId]
+      }));
+      toast.success(response.message || "Join request sent successfully!");
+      
+      // Refresh club memberships
+      const updatedMemberships = await memberApi.getClubMemberships();
+      setClubMemberships(updatedMemberships);
     } catch (error) {
       toast.error(error.message || "Failed to send join request");
     }
