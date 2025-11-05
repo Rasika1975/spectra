@@ -26,7 +26,9 @@ const otpService = {
         ? { email: contactInfo, otp, purpose, method }
         : { phone: contactInfo, otp, purpose, method };
 
+      console.log('Verifying OTP with payload:', payload);
       const response = await axios.post(`${API_BASE_URL}/auth/otp/verify`, payload);
+      console.log('OTP verification response:', response.data);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to verify OTP' };

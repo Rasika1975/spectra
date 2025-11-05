@@ -18,12 +18,13 @@ const AdminLogin = () => {
     console.log('Attempting admin login with:', { email, password });
     
     try {
-      const response = await fetch(API_ENDPOINTS.ADMIN_SIGNIN, {
+      const response = await fetch(API_ENDPOINTS.SIGNIN, {
         method: 'POST',
         ...API_CONFIG,
         body: JSON.stringify({
           email,
           password,
+          role: 'admin',
           requireOTP: true
         }),
       });
@@ -46,15 +47,19 @@ const AdminLogin = () => {
 
   const handleOTPVerified = async (verificationData) => {
     try {
-      // Complete login process
-      const userData = {
-        ...loginData.user,
-        role: 'admin'
-      };
-      console.log('Storing admin data:', userData);
-      
+      // After OTP verified, complete signin to get final token
+      const response = await fetch(API_ENDPOINTS.SIGNIN, {
+        method: 'POST',
+        ...API_CONFIG,
+        body: JSON.stringify({ email, password, role: 'admin', requireOTP: false })
+      });
+
+      const finalData = await response.json();
+      if (!response.ok) throw new Error(finalData.message || 'Failed to complete admin login');
+
+      const userData = { ...finalData.user, role: 'admin' };
       localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('token', loginData.token);
+      localStorage.setItem('token', finalData.token);
       
       toast.success('Login successful!');
       navigate('/admin/dashboard');
