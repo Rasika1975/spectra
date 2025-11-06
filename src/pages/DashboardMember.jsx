@@ -36,18 +36,45 @@ const DashboardMember = () => {
 
   // State for member's profile
   const [profileData, setProfileData] = useState({
-    name: "Alex Johnson",
-    email: "member@test.com",
-    college: "Stanford University",
-    avatar: "https://i.pravatar.cc/150?img=5",
-    bio: "Aspiring full-stack developer and design enthusiast.",
-    phone: "+1 123-456-7890",
-    isCollegeIdVerified: true,
+    name: "",
+    email: "",
+    college: "",
+    avatar: "https://i.pravatar.cc/150?img=5", // Default avatar
+    bio: "",
+    phone: "",
+    isCollegeIdVerified: false,
     isPhoneVerified: false,
-    linkedin: "alex-johnson",
-    instagram: "alex_codes",
-    twitter: "alex_tweets",
+    linkedin: "",
+    instagram: "",
+    twitter: "",
   });
+
+  // Fetch user profile data on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await memberApi.getProfile();
+        if (response.success && response.data) {
+          setProfileData({
+            name: response.data.fullName || "",
+            email: response.data.email || "",
+            college: response.data.collegeName || "",
+            avatar: response.data.avatar || "https://i.pravatar.cc/150?img=5",
+            bio: response.data.bio || "",
+            phone: response.data.phone || "",
+            isCollegeIdVerified: response.data.isCollegeIdVerified || false,
+            isPhoneVerified: response.data.isPhoneVerified || false,
+            linkedin: response.data.socialLinks?.linkedin || "",
+            instagram: response.data.socialLinks?.instagram || "",
+            twitter: response.data.socialLinks?.twitter || "",
+          });
+        }
+      } catch (error) {
+        toast.error(error.message || "Failed to fetch profile data");
+      }
+    };
+    fetchProfile();
+  }, []);
 
   // State for member's posts
   const [posts, setPosts] = useState([
@@ -61,6 +88,7 @@ const DashboardMember = () => {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const eventTypes = ["All", "Workshop", "Competition", "Seminar", "Social"];
   const [selectedType, setSelectedType] = useState("All");
+  const [allEvents, setAllEvents] = useState([]);
 
   // Enhanced states for event management
   const [registeredEvents, setRegisteredEvents] = useState({
@@ -75,33 +103,34 @@ const DashboardMember = () => {
     pending: [],
     created: []
   });
-  const allEvents = [
-    {
-      id: 1,
-      title: "Tech Summit 2025",
-      description: "An annual summit bringing together tech leaders and innovators.",
-      fullDescription: "<p>Join us for a three-day summit filled with keynotes, workshops, and networking opportunities. This year's theme is 'The Future of AI'.</p>",
-      date: "2025-11-15",
-      time: "9:00 AM - 5:00 PM",
-      location: "Main Auditorium",
-      image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400",
-      type: "Seminar",
-      isFree: false,
-      price: "$50",
-      speakers: [{ name: "Dr. Eva Rost", role: "AI Researcher", image: "https://i.pravatar.cc/150?img=25" }],
-    },
-    {
-      id: 2,
-      title: "React Masterclass",
-      description: "Annual tech exhibition showcasing latest innovations",
-      date: "2025-11-20",
-      time: "2:00 PM",
-      location: "Lab 301",
-      image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400",
-      type: "Workshop",
-      isFree: true,
-    },
-  ];
+
+  // Fetch events and club data on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch events
+        const eventsResponse = await memberApi.searchEvents();
+        if (eventsResponse.success && eventsResponse.data) {
+          setAllEvents(eventsResponse.data);
+        }
+
+        // Fetch registered events
+        const registeredResponse = await memberApi.getRegisteredEvents();
+        if (registeredResponse.success && registeredResponse.data) {
+          setRegisteredEvents(registeredResponse.data);
+        }
+
+        // Fetch club memberships
+        const membershipsResponse = await memberApi.getClubMemberships();
+        if (membershipsResponse.success && membershipsResponse.data) {
+          setClubMemberships(membershipsResponse.data);
+        }
+      } catch (error) {
+        toast.error(error.message || "Failed to fetch data");
+      }
+    };
+    fetchData();
+  }, []);
   const filteredEvents = allEvents.filter(event =>
     (selectedType === "All" || event.type === selectedType) &&
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -110,10 +139,22 @@ const DashboardMember = () => {
   // State for clubs
   const [selectedClubId, setSelectedClubId] = useState(null);
   const [showCreateClub, setShowCreateClub] = useState(false);
-  const allClubs = [
-    { id: 1, name: "Tech Innovators", description: "Community for tech enthusiasts.", image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=400", category: "Tech", members: 120, events: 15, posts: 45, isJoined: true },
-    { id: 2, name: "Art & Design Club", description: "Explore your creativity.", image: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=400", category: "Arts", members: 80, events: 8, posts: 22, isJoined: false },
-  ];
+  const [allClubs, setAllClubs] = useState([]);
+
+  // Fetch clubs data
+  useEffect(() => {
+    const fetchClubs = async () => {
+      try {
+        const response = await memberApi.searchClubs();
+        if (response.success && response.data) {
+          setAllClubs(response.data);
+        }
+      } catch (error) {
+        toast.error(error.message || "Failed to fetch clubs");
+      }
+    };
+    fetchClubs();
+  }, []);
 
   const sidebarItems = [
     { name: "Dashboard", icon: LayoutDashboard },
@@ -463,13 +504,28 @@ const ProfileSection = ({ profileData, setProfileData }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(profileData);
 
-  const handleSave = () => {
-    setProfileData(formData);
-    // In a real application, you would make an API call here to save the profile data.
-    // For now, we'll just show an alert and close the editing UI.
-    alert("Profile information saved successfully!");
-    setIsEditing(false); 
-    // Here you would typically make an API call to save the data
+  const handleSave = async () => {
+    try {
+      const response = await memberApi.updateProfile({
+        fullName: formData.name,
+        collegeName: formData.college,
+        bio: formData.bio,
+        phone: formData.phone,
+        socialLinks: {
+          linkedin: formData.linkedin,
+          instagram: formData.instagram,
+          twitter: formData.twitter,
+        }
+      });
+
+      if (response.success) {
+        setProfileData(formData);
+        toast.success("Profile updated successfully!");
+        setIsEditing(false);
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to update profile");
+    }
   };
 
   return (

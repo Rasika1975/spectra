@@ -105,31 +105,29 @@ const memberApi = {
     }
   },
 
-  // Search events
-  searchEvents: async (query) => {
+  // Get all events
+  getAllEvents: async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_BASE_URL}/events/search`, {
-        params: { query },
+      const response = await axios.get(`${API_BASE_URL}/member/events`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to search events' };
+      throw error.response?.data || { message: 'Failed to fetch events' };
     }
   },
 
-  // Search clubs
-  searchClubs: async (query) => {
+  // Get all clubs
+  getAllClubs: async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_BASE_URL}/clubs/search`, {
-        params: { query },
+      const response = await axios.get(`${API_BASE_URL}/member/clubs`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to search clubs' };
+      throw error.response?.data || { message: 'Failed to fetch clubs' };
     }
   }
 };
