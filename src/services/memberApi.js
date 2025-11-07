@@ -118,6 +118,19 @@ const memberApi = {
     }
   },
 
+  // Get public blogs (feed)
+  getPublicBlogs: async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_BASE_URL}/member/blogs`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to fetch blogs' };
+    }
+  },
+
   // Get all clubs
   getAllClubs: async () => {
     try {
@@ -128,6 +141,52 @@ const memberApi = {
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to fetch clubs' };
+    }
+  }
+
+  ,
+  // Get events for a specific club
+  getClubEvents: async (clubId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_BASE_URL}/member/clubs/${clubId}/events`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to fetch club events' };
+    }
+  },
+
+  // Create a new blog post
+  createBlogPost: async (blogData) => {
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      
+      // Add blog data
+      formData.append('title', blogData.title);
+      formData.append('content', blogData.content);
+      formData.append('isPublic', blogData.isPublic);
+      
+      // Add image if exists
+      if (blogData.image) {
+        formData.append('image', blogData.image);
+      }
+
+      const response = await axios.post(
+        `${API_BASE_URL}/member/blogs`, 
+        formData,
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to create blog post' };
     }
   }
 };

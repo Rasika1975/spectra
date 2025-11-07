@@ -77,12 +77,15 @@ const DashboardMember = () => {
   }, []);
 
   // State for member's posts
-  const [posts, setPosts] = useState([
-    { id: 1, caption: "Excited for the upcoming Tech Summit!", image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400", likes: 45, comments: 12, date: "2 days ago", isPublic: true },
-    { id: 2, caption: "New blog post is live! Check it out.", image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400", likes: 78, comments: 23, date: "5 days ago", isPublic: true },
-  ]);
+  const [posts, setPosts] = useState([]);
   const [showCreatePost, setShowCreatePost] = useState(false);
-  const [newPost, setNewPost] = useState({ caption: "", isPublic: true });
+  const [newPost, setNewPost] = useState({ 
+    title: "", 
+    content: "", 
+    isPublic: true,
+    image: null,
+    imagePreview: null
+  });
 
   // State for events
   const [selectedEventId, setSelectedEventId] = useState(null);
@@ -109,7 +112,7 @@ const DashboardMember = () => {
     const fetchData = async () => {
       try {
         // Fetch events
-        const eventsResponse = await memberApi.searchEvents();
+        const eventsResponse = await memberApi.getAllEvents();
         if (eventsResponse.success && eventsResponse.data) {
           setAllEvents(eventsResponse.data);
         }
@@ -118,6 +121,22 @@ const DashboardMember = () => {
         const registeredResponse = await memberApi.getRegisteredEvents();
         if (registeredResponse.success && registeredResponse.data) {
           setRegisteredEvents(registeredResponse.data);
+        }
+
+        // Fetch public blogs to show in posts/feed
+        const blogsResponse = await memberApi.getPublicBlogs();
+        if (blogsResponse.success && blogsResponse.data) {
+          // Map blogs to the posts shape used in this component
+          const blogPosts = blogsResponse.data.map(b => ({
+            id: b._id,
+            caption: b.title,
+            image: b.image || 'https://via.placeholder.com/400x250',
+            likes: b.likes || 0,
+            comments: b.comments || 0,
+            date: b.createdAt,
+            isPublic: true
+          }));
+          setPosts(blogPosts);
         }
 
         // Fetch club memberships
@@ -139,13 +158,14 @@ const DashboardMember = () => {
   // State for clubs
   const [selectedClubId, setSelectedClubId] = useState(null);
   const [showCreateClub, setShowCreateClub] = useState(false);
+  const [profileEditMode, setProfileEditMode] = useState(false);
   const [allClubs, setAllClubs] = useState([]);
 
   // Fetch clubs data
   useEffect(() => {
     const fetchClubs = async () => {
       try {
-        const response = await memberApi.searchClubs();
+        const response = await memberApi.getAllClubs();
         if (response.success && response.data) {
           setAllClubs(response.data);
         }
@@ -157,14 +177,13 @@ const DashboardMember = () => {
   }, []);
 
   const sidebarItems = [
-    { name: "Dashboard", icon: LayoutDashboard },
-    { name: "Profile", icon: Settings },
-    { name: "My Posts", icon: FileText },
-    { name: "Events", icon: Calendar },
-    { name: "Clubs", icon: Users },
-    { name: "Contact", icon: Mail },
+    { name: "Dashboard", icon: LayoutDashboard },
+    { name: "Profile", icon: Settings },
+    { name: "Events", icon: Calendar },
+    { name: "Clubs", icon: Users },
+    { name: "Contact", icon: Mail },
     { name: "Logout", icon: LogOut },
-  ];
+  ];
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -255,31 +274,46 @@ const DashboardMember = () => {
     }
   };
 
-  const handleCreatePost = (e) => {
+  const handleCreatePost = async (e) => {
     e.preventDefault();
-    if (!newPost.caption) return;
-    setPosts([
-      {
-        id: Date.now(),
-        caption: newPost.caption,
-        image: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=400",
-        likes: 0,
-        comments: 0,
-        date: "Just now",
-        isPublic: newPost.isPublic,
-      },
-      ...posts,
-    ]);
-    setShowCreatePost(false);
-    setNewPost({ caption: "", isPublic: true });
+    if (!newPost.title || !newPost.content) return;
+
+    try {
+      const response = await memberApi.createBlogPost({
+        title: newPost.title,
+        content: newPost.content,
+        image: newPost.image,
+        isPublic: newPost.isPublic
+      });
+
+      // Refresh the posts list
+      const blogsResponse = await memberApi.getPublicBlogs();
+      if (blogsResponse.success && blogsResponse.data) {
+        setPosts(blogsResponse.data);
+      }
+
+      // Reset form and close modal
+      setShowCreatePost(false);
+      setNewPost({ 
+        title: "", 
+        content: "", 
+        isPublic: true,
+        image: null,
+        imagePreview: null
+      });
+      
+      toast.success('Post created successfully!');
+    } catch (error) {
+      toast.error(error.message || 'Failed to create post');
+    }
   };
 
-  const renderSection = () => {
+  const renderSection = () => {
     switch (activeSection) {
       case "Dashboard":
         return <DashboardOverview profileData={profileData} posts={posts} allEvents={allEvents} allClubs={allClubs} />;
       case "Profile":
-        return <ProfileSection profileData={profileData} setProfileData={setProfileData} />;
+        return <ProfileSection profileData={profileData} setProfileData={setProfileData} startEditing={profileEditMode} onEditingDone={() => setProfileEditMode(false)} />;
       case "My Posts":
         return <PostsSection posts={posts} showCreatePost={showCreatePost} setShowCreatePost={setShowCreatePost} newPost={newPost} setNewPost={setNewPost} />;
       case "Events":
@@ -384,6 +418,13 @@ const DashboardMember = () => {
               <p className="font-semibold text-sm truncate">{profileData.name}</p>
               <p className="text-xs text-gray-400 truncate">{profileData.email}</p>
             </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setActiveSection('Profile'); setProfileEditMode(true); }}
+                className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded-md">
+                Edit
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -406,17 +447,90 @@ const DashboardMember = () => {
               </button>
             </div>
             <form onSubmit={handleCreatePost} className="space-y-4">
+              <input
+                type="text"
+                value={newPost.title}
+                onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                placeholder="Post Title"
+                className="w-full border border-gray-700 rounded-lg px-4 py-2.5 bg-gray-800 text-white"
+              />
               <textarea
-                value={newPost.caption}
-                onChange={(e) => setNewPost({ ...newPost, caption: e.target.value })}
+                value={newPost.content}
+                onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
                 placeholder="What's on your mind?"
                 rows="4"
                 className="w-full border border-gray-700 rounded-lg px-4 py-2.5 bg-gray-800 text-white"
               ></textarea>
-              {/* Add image upload button here if needed */}
+              
+              {/* Image Upload Section */}
+              <div className="space-y-2">
+                <label className="block text-sm text-gray-400">Add Image</label>
+                <div className="flex items-center gap-4">
+                  {newPost.imagePreview && (
+                    <div className="relative">
+                      <img 
+                        src={newPost.imagePreview} 
+                        alt="Preview" 
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setNewPost(prev => ({ ...prev, image: null, imagePreview: null }))}
+                        className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 text-white"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  {!newPost.imagePreview && (
+                    <label className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg cursor-pointer hover:bg-white/20 transition-colors">
+                      <Camera className="w-5 h-5" />
+                      <span>Upload Image</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setNewPost(prev => ({
+                                ...prev,
+                                image: file,
+                                imagePreview: reader.result
+                              }));
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 mt-4">
+                <label className="flex items-center gap-2 text-sm text-gray-400">
+                  <input
+                    type="checkbox"
+                    checked={newPost.isPublic}
+                    onChange={(e) => setNewPost({ ...newPost, isPublic: e.target.checked })}
+                    className="rounded border-gray-700 bg-gray-800 text-violet-600 focus:ring-violet-500"
+                  />
+                  Make this post public
+                </label>
+              </div>
+              
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => setShowCreatePost(false)} className="bg-white/10 text-gray-300 px-6 py-2 rounded-lg">Cancel</button>
-                <button type="submit" className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-6 py-2 rounded-lg">Post</button>
+                <button 
+                  type="submit" 
+                  disabled={!newPost.title || !newPost.content}
+                  className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-6 py-2 rounded-lg disabled:opacity-50"
+                >
+                  Post
+                </button>
               </div>
             </form>
           </div>
@@ -461,12 +575,11 @@ const DashboardOverview = ({ profileData, posts, allEvents, allClubs }) => (
     
     {/* Stats Grid */}
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {[
-        { label: "My Posts", value: posts.length, icon: FileText, color: "blue" },
-        { label: "Joined Clubs", value: allClubs.filter(c => c.isJoined).length, icon: Users, color: "green" },
-        { label: "Registered Events", value: allEvents.length, icon: Calendar, color: "purple" },
-        { label: "Likes Received", value: posts.reduce((acc, p) => acc + p.likes, 0), icon: Heart, color: "red" },
-      ].map((stat, i) => (
+        {[
+          { label: "My Posts", value: posts.length, icon: FileText, color: "blue" },
+          { label: "Joined Clubs", value: allClubs.filter(c => c.isJoined).length, icon: Users, color: "green" },
+          { label: "Registered Events", value: allEvents.length, icon: Calendar, color: "purple" },
+        ].map((stat, i) => (
         <div key={i} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-2">
             <div className={`p-3 rounded-lg bg-gradient-to-br from-${stat.color}-500 to-${stat.color}-600`}>
@@ -500,13 +613,33 @@ const DashboardOverview = ({ profileData, posts, allEvents, allClubs }) => (
   </div>
 );
 
-const ProfileSection = ({ profileData, setProfileData }) => {
+const ProfileSection = ({ profileData, setProfileData, startEditing = false, onEditingDone }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(profileData);
 
+  // Sync formData when profileData changes
+  useEffect(() => {
+    setFormData(profileData);
+  }, [profileData]);
+
+  // Start editing if parent requests it
+  useEffect(() => {
+    if (startEditing) setIsEditing(true);
+  }, [startEditing]);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData(prev => ({ ...prev, avatar: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = async () => {
     try {
-      const response = await memberApi.updateProfile({
+      const payload = {
         fullName: formData.name,
         collegeName: formData.college,
         bio: formData.bio,
@@ -516,12 +649,16 @@ const ProfileSection = ({ profileData, setProfileData }) => {
           instagram: formData.instagram,
           twitter: formData.twitter,
         }
-      });
+      };
+      if (formData.avatar) payload.avatar = formData.avatar;
+
+      const response = await memberApi.updateProfile(payload);
 
       if (response.success) {
         setProfileData(formData);
         toast.success("Profile updated successfully!");
         setIsEditing(false);
+        if (typeof onEditingDone === 'function') onEditingDone();
       }
     } catch (error) {
       toast.error(error.message || "Failed to update profile");
@@ -544,9 +681,12 @@ const ProfileSection = ({ profileData, setProfileData }) => {
           <div className="relative">
             <img src={formData.avatar} alt="Profile" className="w-32 h-32 rounded-full border-4 border-violet-500/50 object-cover" />
             {isEditing && (
-              <button className="absolute bottom-1 right-1 bg-white/90 text-violet-600 p-2 rounded-full shadow-md hover:bg-white transition-colors">
-                <Camera className="w-4 h-4" />
-              </button>
+              <div className="absolute bottom-1 right-1">
+                <label className="bg-white/90 text-violet-600 p-2 rounded-full shadow-md hover:bg-white cursor-pointer">
+                  <Camera className="w-4 h-4" />
+                  <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                </label>
+              </div>
             )}
           </div>
           <div className="flex-1 text-center md:text-left">
@@ -563,7 +703,7 @@ const ProfileSection = ({ profileData, setProfileData }) => {
           </div>
         </div>
 
-        <div className="mt-8 space-y-6">
+          <div className="mt-8 space-y-6">
           <div>
             <label className="text-sm text-gray-400">Bio</label>
             {isEditing ? (
@@ -635,16 +775,20 @@ const PostsSection = ({ posts, showCreatePost, setShowCreatePost, newPost, setNe
     </div>
     <div className="grid md:grid-cols-2 gap-6">
       {posts.map(post => (
-        <div key={post.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
-          <img src={post.image} alt="Post" className="w-full h-48 object-cover" />
-          <div className="p-4">
-            <p className="mb-2">{post.caption}</p>
+        <div key={post._id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
+          {post.image?.url && (
+            <img src={post.image.url} alt={post.title} className="w-full h-48 object-cover" />
+          )}
+          <div className="p-6">
+            <h3 className="text-xl font-bold mb-2">{post.title}</h3>
+            <p className="mb-4 text-gray-300">{post.content.slice(0, 150)}{post.content.length > 150 ? '...' : ''}</p>
             <div className="flex justify-between items-center text-sm text-gray-400">
               <div className="flex gap-4">
-                <span className="flex items-center gap-1"><Heart className="w-4 h-4" /> {post.likes}</span>
-                <span className="flex items-center gap-1"><MessageCircle className="w-4 h-4" /> {post.comments}</span>
+                {post.author && (
+                  <span className="flex items-center gap-1">By: {post.author.fullName || 'Unknown'}</span>
+                )}
               </div>
-              <span>{post.date}</span>
+              <span>{new Date(post.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
         </div>
@@ -757,12 +901,6 @@ const EventDetails = ({ event, onBack, onRegister, isRegistered }) => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold text-white">Discover Clubs</h2>
-        <button 
-          onClick={() => setShowCreateClub(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-lg"
-        >
-          <Plus className="w-4 h-4" /> Create Club
-        </button>
       </div>
 
       {/* Club Status Tabs */}
@@ -828,18 +966,77 @@ const EventDetails = ({ event, onBack, onRegister, isRegistered }) => (
     </div>
   );
 
-const ClubDetails = ({ club, onBack }) => (
-  <div>
-    <button onClick={onBack} className="flex items-center gap-2 mb-6 text-violet-400">
-      <ArrowLeft className="w-4 h-4" /> Back to Clubs
-    </button>
-    <div className="bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-2xl">
-      <h2 className="text-4xl font-bold mb-4">{club.name}</h2>
-      <p>{club.description}</p>
-      {/* More club details can be added here */}
+const ClubDetails = ({ club, onBack }) => {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchClubEvents = async () => {
+      try {
+        setLoading(true);
+        const res = await memberApi.getClubEvents(club._id || club.id);
+        if (res.success && res.data) setEvents(res.data);
+      } catch (e) {
+        toast.error(e.message || 'Failed to load club events');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (club) fetchClubEvents();
+  }, [club]);
+
+  const handleRegister = async (eventId) => {
+    try {
+      const resp = await memberApi.registerForEvent(eventId);
+      if (resp.success) {
+        toast.success(resp.message || 'Registered successfully');
+        // Refresh events to update status
+        const res = await memberApi.getClubEvents(club._id || club.id);
+        if (res.success && res.data) setEvents(res.data);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to register for event');
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={onBack} className="flex items-center gap-2 mb-6 text-violet-400">
+        <ArrowLeft className="w-4 h-4" /> Back to Clubs
+      </button>
+      <div className="bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-2xl">
+        <h2 className="text-4xl font-bold mb-4">{club.name}</h2>
+        <p className="mb-6">{club.description}</p>
+
+        <h3 className="text-2xl font-semibold mb-4">Events by {club.name}</h3>
+        {loading ? (
+          <p className="text-gray-400">Loading events...</p>
+        ) : events.length === 0 ? (
+          <p className="text-gray-400">No upcoming events.</p>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6">
+            {events.map(ev => (
+              <div key={ev._id || ev.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4">
+                <h4 className="font-bold text-lg">{ev.title}</h4>
+                <p className="text-sm text-gray-400">{new Date(ev.date).toDateString()}</p>
+                <p className="mt-2 text-gray-300">{ev.description?.slice(0, 140)}</p>
+                <div className="mt-4">
+                  {ev.isRegistered ? (
+                    <div className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg text-sm inline-flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" /> Registered
+                    </div>
+                  ) : (
+                    <button onClick={() => handleRegister(ev._id || ev.id)} className="px-4 py-2 bg-violet-600 rounded-lg text-white">Register</button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const ContactSection = () => (
   <div className="space-y-6">

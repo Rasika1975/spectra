@@ -44,7 +44,15 @@ const DashboardClub = () => {
 
   // Local blog/event form states
   const [newBlog, setNewBlog] = useState({title:"",content:"", tags: ""});
-  const [newEvent, setNewEvent] = useState({name:"",date:"",time:"",venue:"",description:"",image:""});
+  const [newEvent, setNewEvent] = useState({
+    name: "",
+    date: "",
+    time: "",
+    venue: "",
+    description: "",
+    image: null,
+    imagePreview: null
+  });
 
   // Club Profile State
   const [clubProfile, setClubProfile] = useState({
@@ -471,31 +479,75 @@ const DashboardClub = () => {
 const renderMembers = () => {
   // You already have members state, searchTerm state, and handleMemberAction, removeMember handlers
 
-  // Filtered members: by name
-  const filteredMembers = members.filter((m) =>
-    m.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // State for filters
+  const [cityFilter, setCityFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
-  // Status filter example
-  // Optionally add another state: statusFilter ('All', 'Active', 'Pending') and filter accordingly.
+  // Get unique cities from members
+  const cities = [...new Set(members.map(m => m.college.split(',').pop().trim()))].sort();
+
+  // Filtered members: by name, city and status
+  const filteredMembers = members.filter((m) => {
+    const nameMatch = m.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const cityMatch = cityFilter === 'all' || m.college.toLowerCase().includes(cityFilter.toLowerCase());
+    const statusMatch = statusFilter === 'all' || m.status.toLowerCase() === statusFilter.toLowerCase();
+    return nameMatch && cityMatch && statusMatch;
+  });
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <h2 className="text-2xl font-bold text-white">Member Management</h2>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search members..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 bg-gray-800 text-white"
-            />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <h2 className="text-2xl font-bold text-white">Member Management</h2>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+              <input
+                type="text"
+                placeholder="Search members..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 bg-gray-800 text-white"
+              />
+            </div>
           </div>
-          {/* Optional Status Filter */}
-          {/* <select onChange={...} value={...} ...>... */}
+        </div>
+
+        {/* Filters Section */}
+        <div className="flex flex-wrap items-center gap-4 bg-white/5 p-4 rounded-xl">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-400" />
+            <span className="text-sm text-gray-400">Filters:</span>
+          </div>
+          
+          {/* City Filter */}
+          <select
+            value={cityFilter}
+            onChange={(e) => setCityFilter(e.target.value)}
+            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-violet-600 focus:outline-none"
+          >
+            <option value="all">All Cities</option>
+            {cities.map(city => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
+
+          {/* Status Filter */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-violet-600 focus:outline-none"
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+          </select>
+
+          {/* Results Counter */}
+          <div className="ml-auto text-sm text-gray-400">
+            {filteredMembers.length} member{filteredMembers.length !== 1 ? 's' : ''} found
+          </div>
         </div>
       </div>
 
@@ -951,6 +1003,54 @@ const renderMembers = () => {
               <input type="time" value={newEvent.time} onChange={e => setNewEvent({ ...newEvent, time: e.target.value })} className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white" />
               <input type="text" value={newEvent.venue} onChange={e => setNewEvent({ ...newEvent, venue: e.target.value })} placeholder="Venue" className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white" />
               <textarea rows="4" value={newEvent.description} onChange={e => setNewEvent({ ...newEvent, description: e.target.value })} placeholder="Description" className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white" />
+              
+              {/* Image Upload Section */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-400">Event Banner Image</label>
+                <div className="flex items-center gap-4">
+                  {newEvent.imagePreview && (
+                    <div className="relative">
+                      <img 
+                        src={newEvent.imagePreview} 
+                        alt="Preview" 
+                        className="w-32 h-20 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setNewEvent(prev => ({ ...prev, image: null, imagePreview: null }))}
+                        className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 text-white hover:bg-red-600"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  {!newEvent.imagePreview && (
+                    <label className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg cursor-pointer hover:bg-white/20 transition-colors">
+                      <ImageIcon className="w-5 h-5" />
+                      <span>Upload Image</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setNewEvent(prev => ({
+                                ...prev,
+                                image: file,
+                                imagePreview: reader.result
+                              }));
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
               <div className="flex gap-3">
                 <button
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-lg font-semibold"
