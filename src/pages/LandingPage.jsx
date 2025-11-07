@@ -49,33 +49,6 @@ const ClubCard = ({ club }) => (
   </div>
 );
 
-// Reusable Blog Card Component
-const BlogCard = ({ blog }) => (
-  <div className="bg-black/40 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 text-left hover:-translate-y-2 hover:border-cyan-500/40 hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500 group">
-    <img src={blog.image} alt={blog.title} className="w-full h-40 object-cover rounded-lg mb-4 group-hover:scale-105 transition-transform duration-500" />
-    <div className="flex items-center gap-2 mb-2">
-      <span className="bg-cyan-500/20 text-cyan-300 text-xs font-semibold px-2.5 py-1 rounded-full border border-cyan-500/30">
-        {blog.category}
-      </span>
-      <span className="text-gray-400 text-xs">
-        {new Date(blog.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-      </span>
-    </div>
-    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">{blog.title}</h3>
-    <p className="text-gray-400 mb-4 text-sm h-12 overflow-hidden">{blog.excerpt}</p>
-    <div className="flex items-center gap-3 border-t border-cyan-500/20 pt-3">
-      <img src={blog.author.avatar} alt={blog.author.name} className="w-8 h-8 rounded-full border border-cyan-500/30" />
-      <span className="text-gray-300 text-sm">{blog.author.name}</span>
-    </div>
-    <Link
-      to={`/blogs/${blog.id}`}
-      className="mt-4 block w-full text-center bg-gradient-to-r from-cyan-600/50 to-violet-600/50 text-white py-2 rounded-lg hover:from-cyan-600 hover:to-violet-600 hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300"
-    >
-      Read More
-    </Link>
-  </div>
-);
-
 // 🌟 Main Landing Page Component
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -120,10 +93,7 @@ export default function LandingPage() {
   }, []);
 
   const navLinks = [
-    { name: "About", href: "#about" },
     { name: "Features", href: "#features" },
-    { name: "Blogs", href: "#blogs" },
-    { name: "Contact", href: "#contact-section" },
   ];
 
   const features = [
@@ -171,56 +141,6 @@ export default function LandingPage() {
     "Event hosting capabilities",
     "Premium content features",
   ];
-
-  // Blog data and filtering logic
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const categories = ['All', 'Technology', 'AI/ML', 'Design', 'Business', 'Lifestyle'];
-
-  const blogs = [
-    {
-      id: 1,
-      title: 'Getting Started with React',
-      excerpt: 'Learn the basics of React and start building modern web applications with components, hooks, and state management',
-      category: 'Technology',
-      date: '2025-10-25',
-      image: 'https://via.placeholder.com/400x250',
-      author: { name: 'John Doe', avatar: 'https://via.placeholder.com/40' }
-    },
-    {
-      id: 2,
-      title: 'The Future of AI',
-      excerpt: 'Exploring the possibilities and challenges of artificial intelligence in the modern world',
-      category: 'AI/ML',
-      date: '2025-10-23',
-      image: 'https://via.placeholder.com/400x250',
-      author: { name: 'Jane Smith', avatar: 'https://via.placeholder.com/40' }
-    },
-    {
-      id: 3,
-      title: 'UI/UX Design Principles',
-      excerpt: 'Master the fundamental principles of creating beautiful and user-friendly interfaces',
-      category: 'Design',
-      date: '2025-10-20',
-      image: 'https://via.placeholder.com/400x250',
-      author: { name: 'Mike Johnson', avatar: 'https://via.placeholder.com/40' }
-    },
-    {
-      id: 4,
-      title: 'Entrepreneurship 101',
-      excerpt: 'Essential tips for aspiring entrepreneurs looking to start their first business',
-      category: 'Business',
-      date: '2025-10-18',
-      image: 'https://via.placeholder.com/400x250',
-      author: { name: 'Sarah Williams', avatar: 'https://via.placeholder.com/40' }
-    }
-  ];
-
-  const filteredBlogs = blogs.filter(blog => {
-    const matchesSearch = blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          blog.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || blog.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
 
   const clubs = [
     {
@@ -304,7 +224,7 @@ export default function LandingPage() {
               {navLinks.map((link) => (
                 <a
                   key={link.name}
-                  href={link.href}
+                  href={link.href} // This should be updated to use Link for internal navigation
                   className="text-gray-300 hover:text-cyan-400 relative group transition-colors duration-300"
                 >
                   {link.name}
@@ -329,7 +249,7 @@ export default function LandingPage() {
               {navLinks.map((link) => (
                 <a
                   key={link.name}
-                  href={link.href}
+                  href={link.href} // This should be updated to use Link for internal navigation
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block text-gray-300 hover:text-cyan-400 text-lg transition-colors"
                 >
@@ -365,7 +285,6 @@ export default function LandingPage() {
           </p>
           <div className="flex gap-4 flex-wrap justify-center">
             <Link to="/signup" className="bg-gradient-to-r from-cyan-600 to-violet-600 px-8 py-4 rounded-full font-bold text-lg hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/50 transition-all">Get Started</Link>
-            <a href="#about" className="bg-black/40 backdrop-blur-xl border border-cyan-500/30 px-8 py-4 rounded-full font-bold text-lg hover:bg-black/60 hover:border-cyan-500/50 transition-all">Learn More</a>
           </div>
         </div>
       </section>
@@ -375,35 +294,6 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto relative">
           {/* Section Border Accent */}
           <div className="absolute left-0 top-0 w-1 h-32 bg-gradient-to-b from-cyan-500 to-transparent"></div>
-          
-          <div className="text-center max-w-4xl mx-auto">
-            <h2 className="text-5xl font-black mb-6">
-              <span className="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
-                About Spectra Community
-              </span>
-            </h2>
-            <p className="text-xl text-gray-300 mb-12">
-              Building bridges between students, clubs, and opportunities.
-            </p>
-          </div>
-          
-          <div className="max-w-4xl mx-auto text-center mb-20 bg-black/40 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-12">
-            <h3 className="text-3xl font-bold mb-6 text-cyan-400 flex items-center justify-center gap-2">
-              <div className="w-1 h-8 bg-gradient-to-b from-cyan-500 to-violet-500"></div>
-              Our Story
-            </h3>
-            <p className="text-gray-300 text-lg leading-relaxed mb-6">
-              Spectra Community was founded with a vision to create a unified platform 
-              where students can discover opportunities, connect with like-minded peers, 
-              and actively participate in college life beyond academics.
-            </p>
-            <p className="text-gray-300 text-lg leading-relaxed">
-              We believe that every student deserves easy access to events, clubs, and 
-              communities that align with their interests. Our platform empowers students 
-              to explore, engage, and grow while helping clubs and communities manage their 
-              activities efficiently.
-            </p>
-          </div>
           
           {/* Stats */}
           <div id="stats" className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
@@ -464,69 +354,6 @@ export default function LandingPage() {
         </div>
       </section>
       
-      {/* Blogs Section */}
-      <section id="blogs" className="py-24 px-6 bg-black relative">
-        <div className="absolute left-0 top-24 w-1 h-32 bg-gradient-to-b from-cyan-500 to-transparent"></div>
-        
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-5xl font-black text-center mb-6">
-            <span className="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
-              Blogs & Articles
-            </span>
-          </h2>
-          <p className="text-xl text-gray-300 mb-12 text-center">
-            Discover insights, tutorials, and stories from our community
-          </p>
-
-          {/* Filters */}
-          <div className="py-8 bg-black/40 backdrop-blur-xl border border-cyan-500/20 rounded-2xl mb-12 shadow-lg">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                {/* Search */}
-                <div className="w-full md:w-96">
-                  <input
-                    type="text"
-                    placeholder="Search blogs..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-3 border border-cyan-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-black/60 text-white placeholder-gray-500 backdrop-blur-xl transition-all"
-                  />
-                </div>
-                {/* Categories */}
-                <div className="flex gap-2 flex-wrap justify-center">
-                  {categories.map(category => (
-                    <button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                        selectedCategory === category
-                          ? 'bg-gradient-to-r from-cyan-600 to-violet-600 text-white shadow-lg shadow-cyan-500/30'
-                          : 'bg-black/60 border border-cyan-500/30 text-gray-300 hover:bg-black/80 hover:border-cyan-500/50'
-                      }`}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Blogs Grid */}
-          {filteredBlogs.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredBlogs.map(blog => (
-                <BlogCard key={blog.id} blog={blog} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 bg-black/40 backdrop-blur-xl border border-cyan-500/20 rounded-2xl">
-              <p className="text-gray-400 text-lg">No blogs found matching your criteria</p>
-            </div>
-          )}
-        </div>
-      </section>
-      
       {/* CTA */}
       <section id="signup" className="py-24 px-6 bg-gradient-to-br from-cyan-600/20 via-violet-600/20 to-cyan-800/20 backdrop-blur-xl text-center relative overflow-hidden border-y border-cyan-500/30">
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5"></div>
@@ -551,125 +378,6 @@ export default function LandingPage() {
           <Link to="/signup" className="inline-flex items-center bg-gradient-to-r from-cyan-600 to-violet-600 text-white px-10 py-5 rounded-full font-bold text-lg hover:scale-105 hover:shadow-2xl hover:shadow-cyan-500/40 transition-all" >
             Start Your Journey <ArrowRightIcon className="inline ml-2" />
           </Link>
-        </div>
-      </section>
-      
-      {/* Contact Section */}
-      <section id="contact-section" className="py-24 px-6 bg-black relative">
-        <div className="absolute left-0 top-24 w-1 h-32 bg-gradient-to-b from-cyan-500 to-transparent"></div>
-        
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-5xl font-black text-center mb-6">
-            <span className="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
-              Contact Us
-            </span>
-          </h2>
-          <p className="text-xl text-gray-300 mb-12 text-center">
-            We'd love to hear from you
-          </p>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Contact Form */}
-            <div className="bg-black/40 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-8 hover:border-cyan-500/30 transition-all">
-              <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-2">
-                <div className="w-1 h-6 bg-gradient-to-b from-cyan-500 to-violet-500"></div>
-                Send us a Message
-              </h3>
-              <form onSubmit={handleContactSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Your Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full px-4 py-3 border border-cyan-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-black/60 text-white placeholder-gray-500 backdrop-blur-xl transition-all"
-                    placeholder="John Doe"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full px-4 py-3 border border-cyan-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-black/60 text-white placeholder-gray-500 backdrop-blur-xl transition-all"
-                    placeholder="john@example.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Subject
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.subject}
-                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                    className="w-full px-4 py-3 border border-cyan-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-black/60 text-white placeholder-gray-500 backdrop-blur-xl transition-all"
-                    placeholder="How can we help?"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Message
-                  </label>
-                  <textarea
-                    required
-                    rows="5"
-                    value={formData.message}
-                    onChange={(e) => setFormData({...formData, message: e.target.value})}
-                    className="w-full px-4 py-3 border border-cyan-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-black/60 text-white placeholder-gray-500 backdrop-blur-xl transition-all resize-none"
-                    placeholder="Tell us more about your inquiry..."
-                  ></textarea>
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-cyan-600 to-violet-600 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/40 transition-all text-white py-3 rounded-lg font-bold"
-                >
-                  Send Message
-                </button>
-              </form>
-            </div>
-            
-            {/* Contact Info */}
-            <div className="bg-black/40 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-8 hover:border-cyan-500/30 transition-all">
-              <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-2">
-                <div className="w-1 h-6 bg-gradient-to-b from-cyan-500 to-violet-500"></div>
-                Get in Touch
-              </h3>
-              <ul className="space-y-6 text-gray-300">
-                <li className="flex items-start gap-4 p-4 bg-black/40 rounded-lg border border-cyan-500/10 hover:border-cyan-500/30 transition-all">
-                  <Mail className="w-6 h-6 text-cyan-400 mt-1 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-white mb-1">Email</p>
-                    <p className="text-sm">info@spectracommunity.com</p>
-                    <p className="text-sm">support@spectracommunity.com</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-4 p-4 bg-black/40 rounded-lg border border-cyan-500/10 hover:border-cyan-500/30 transition-all">
-                  <Phone className="w-6 h-6 text-cyan-400 mt-1 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-white mb-1">Phone</p>
-                    <p className="text-sm">+1 (555) 123-4567</p>
-                    <p className="text-sm">+1 (555) 987-6543</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-4 p-4 bg-black/40 rounded-lg border border-cyan-500/10 hover:border-cyan-500/30 transition-all">
-                  <MapPin className="w-6 h-6 text-cyan-400 mt-1 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-white mb-1">Address</p>
-                    <p className="text-sm">123 University Avenue, College Town, ST 12345</p>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
         </div>
       </section>
       
@@ -702,10 +410,7 @@ export default function LandingPage() {
               Quick Links
             </h4>
             <ul className="space-y-4 text-sm">
-              <li><a href="#about" className="hover:text-cyan-400 hover:pl-2 transition-all duration-300">About Us</a></li>
               <li><a href="#features" className="hover:text-cyan-400 hover:pl-2 transition-all duration-300">Features</a></li>
-              <li><a href="#blogs" className="hover:text-cyan-400 hover:pl-2 transition-all duration-300">Blogs</a></li>
-              <li><a href="#contact-section" className="hover:text-cyan-400 hover:pl-2 transition-all duration-300">Contact</a></li>
               <li><Link to="/signup" className="hover:text-cyan-400 hover:pl-2 transition-all duration-300">Join Now</Link></li>
             </ul>
           </div>

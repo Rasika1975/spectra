@@ -657,6 +657,7 @@ const ProfileSection = ({ profileData, setProfileData, startEditing = false, onE
       if (response.success) {
         setProfileData(formData);
         toast.success("Profile updated successfully!");
+        localStorage.setItem("user", JSON.stringify(response.user));
         setIsEditing(false);
         if (typeof onEditingDone === 'function') onEditingDone();
       }

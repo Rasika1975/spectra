@@ -1,23 +1,10 @@
-// src/App.jsx
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import { HashRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import Footer from "./components/Footer";
 
 // Public Pages
-import Home from "./pages/Home";
-import About from "./pages/About";
 import LandingPage from "./pages/LandingPage";
-import Blogs from "./pages/Blogs";
-import BlogDetail from "./pages/BlogDetail";
 import Clubs from "./pages/Clubs";
-import ClubDetail from "./pages/ClubDetail";
-import Events from "./pages/Events";
-import EventDetail from "./pages/EventDetail";
-import Contact from "./pages/Contact";
-import Terms from "./pages/Terms";
-import VisionMission from "./pages/VisionMission";
 
 // Auth
 import Login from "./pages/Login";
@@ -31,44 +18,40 @@ import DashboardClub from "./pages/DashboardClub";
 import DashboardAdmin from "./pages/DashboardAdmin";
 
 // Utilities
-import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const AppLayout = () => {
   const location = useLocation();
-  // Define paths where the main Navbar and Footer should be hidden.
   const noLayoutPaths = ['/', '/login', '/signup'];
-  // The LandingPage, Login, Signup, and all dashboard pages are self-contained,
-  // so we don't show the global Navbar/Footer on them.
-  const showLayout = !noLayoutPaths.includes(location.pathname) && !location.pathname.startsWith('/member/dashboard') && !location.pathname.startsWith('/club/dashboard') && !location.pathname.startsWith('/admin/dashboard');
+
+  const showLayout =
+    !noLayoutPaths.includes(location.pathname) &&
+    !location.pathname.startsWith('/member/dashboard') &&
+    !location.pathname.startsWith('/club/dashboard') &&
+    !location.pathname.startsWith('/admin/dashboard');
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Toaster position="top-right" />
-      {showLayout && <Navbar />}
       <main className="flex-grow">
         <Routes>
-          {/* 🏠 Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/home-legacy" element={<Home />} /> {/* Keeping old home for reference if needed */}
-          <Route path="/about" element={<About />} />
-          <Route path="/blogs" element={<Blogs />} />
-          <Route path="/blogs/:id" element={<BlogDetail />} />
-          <Route path="/clubs" element={<Clubs />} />
-          <Route path="/clubs/:id" element={<ClubDetail />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/events/:id" element={<EventDetail />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/vision-mission" element={<VisionMission />} />
 
-          {/* 🔐 Auth Routes */}
+          {/* ✅ Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/clubs" element={<Clubs />} />
+
+          {/* ✅ Deleted → <Route path="/clubs/:id" element={<ClubDetail />} /> */}
+
+          {/* ✅ If someone still opens /clubs/:id → send blank 404 */}
+          <Route path="/clubs/:id" element={<div></div>} />
+
+          {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/admin-signup" element={<AdminSignup />} />
           <Route path="/admin-login" element={<AdminLogin />} />
 
-          {/* 👥 Protected Routes */}
+          {/* Protected Routes */}
           <Route
             path="/member/dashboard/*"
             element={
@@ -77,6 +60,7 @@ const AppLayout = () => {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/club/dashboard/*"
             element={
@@ -85,6 +69,7 @@ const AppLayout = () => {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/admin/dashboard/*"
             element={
@@ -94,11 +79,8 @@ const AppLayout = () => {
             }
           />
 
-          {/* 404 Not Found */}
-          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      {showLayout && <Footer />}
     </div>
   );
 };
