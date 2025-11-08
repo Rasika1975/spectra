@@ -23,6 +23,8 @@ import {
   UserX,
   LogOut,
   Archive,
+  CheckCircle,
+  GitPullRequestDraft,
   Settings,
   TrendingUp,
 } from "lucide-react";
@@ -753,107 +755,118 @@ const DashboardAdmin = () => {
   };
   
   // ======================== BLOGS SECTION ========================
-  const renderBlogs = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <h2 className="text-2xl font-bold text-white">Blogs Management</h2>
-        <button
-          onClick={() => {
-            setModalType("createBlog");
-            setShowModal(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-lg hover:scale-105 transition-transform"
-        >
-          <Plus className="w-4 h-4" />
-          Create Blog
-        </button>
-      </div>
+const renderBlogs = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between flex-wrap gap-4">
+      <h2 className="text-2xl font-bold text-white">Blogs Management</h2>
+      <button
+        onClick={() => {
+          setModalType("createBlog");
+          setShowModal(true);
+        }}
+        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-lg hover:scale-105 transition-transform"
+      >
+        <Plus className="w-4 h-4" />
+        Create Blog
+      </button>
+    </div>
 
-      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
-        <table className="min-w-full divide-y divide-white/10">
-          <thead className="bg-white/5">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Title</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Author</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Club</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Stats</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/10">
-            {blogs.map((blog) => (
-              <tr key={blog.id} className="hover:bg-white/5">
-                <td className="px-6 py-4">
-                  <p className="font-semibold text-white">{blog.title}</p>
-                  <p className="text-sm text-gray-400">{blog.category}</p>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-300">{blog.author}</td>
-                <td className="px-6 py-4 text-sm text-gray-300">{blog.club}</td>
-                <td className="px-6 py-4 text-sm text-gray-400">{blog.date}</td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="text-gray-400 flex items-center gap-1"><Eye className="w-4 h-4"/> {blog.views}</span>
-                    <span className="text-gray-400 flex items-center gap-1">❤️ {blog.likes}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    blog.status === "Published" ? "bg-green-500/20 text-green-300" : "bg-gray-500/20 text-gray-300"
-                  }`}>
+    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
+      <table className="min-w-full divide-y divide-white/10">
+        <thead className="bg-white/5">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Title</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Author</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Club</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Stats</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-white/10">
+          {blogs.map((blog) => (
+            <tr key={blog.id} className="hover:bg-white/5">
+              <td className="px-6 py-4">
+                <p className="font-semibold text-white">{blog.title}</p>
+                <p className="text-sm text-gray-400">{blog.category}</p>
+              </td>
+              <td className="px-6 py-4 text-sm text-gray-300">{blog.author}</td>
+              <td className="px-6 py-4 text-sm text-gray-300">{blog.club}</td>
+              <td className="px-6 py-4 text-sm text-gray-400">{blog.date}</td>
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-gray-400 flex items-center gap-1"><Eye className="w-4 h-4"/> {blog.views}</span>
+                  <span className="text-gray-400 flex items-center gap-1">❤️ {blog.likes}</span>
+                </div>
+              </td>
+              <td className="px-6 py-4">
+                {blog.status === "Published" ? (
+                  <span className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-300">
+                    <CheckCircle className="w-4 h-4" />
                     {blog.status}
                   </span>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedItem(blog);
-                        setModalType("viewBlog");
-                        setShowModal(true);
-                      }}
-                      className="p-2 text-blue-400 hover:bg-white/10 rounded"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setItemToEdit(blog);
-                        setModalType("editBlog");
-                        setShowModal(true);
-                      }}
-                      className="p-2 text-yellow-400 hover:bg-white/10 rounded"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleArchiveBlog(blog.id);
-                      }}
-                      className="p-2 text-gray-400 hover:bg-white/10 rounded"
-                    >
-                      <Archive className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedItem(blog);
-                        setModalType("deleteBlog");
-                        setShowModal(true);
-                      }}
-                      className="p-2 text-red-400 hover:bg-white/10 rounded"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                ) : (
+                  <span className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-300">
+                    <GitPullRequestDraft className="w-4 h-4" />
+                    {blog.status}
+                  </span>
+                )}
+              </td>
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedItem(blog);
+                      setModalType("viewBlog");
+                      setShowModal(true);
+                    }}
+                    className="p-2 text-blue-400 hover:bg-white/10 rounded"
+                    title="View"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setItemToEdit(blog);
+                      setModalType("editBlog");
+                      setShowModal(true);
+                    }}
+                    className="p-2 text-yellow-400 hover:bg-white/10 rounded"
+                    title="Edit"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => handleArchiveBlog(blog.id)}
+                    className="p-2 text-gray-400 hover:bg-white/10 rounded"
+                    title="Archive"
+                  >
+                    <Archive className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setSelectedItem(blog);
+                      setModalType("deleteBlog");
+                      setShowModal(true);
+                    }}
+                    className="p-2 text-red-400 hover:bg-white/10 rounded"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
-  );
+  </div>
+);
 
   // ======================== EVENTS SECTION ========================
   const renderEvents = () => (
@@ -1275,6 +1288,76 @@ const DashboardAdmin = () => {
     <div className="flex justify-end pt-4">
       <button onClick={() => setShowModal(false)} className="px-4 py-2 bg-white/10 rounded-lg">
         Close
+      </button>
+    </div>
+  </div>
+)}
+{modalType === "editBlog" && itemToEdit && (
+  <div className="space-y-4 text-gray-300">
+    <h3 className="text-xl font-bold text-white">Edit Blog</h3>
+
+    <div>
+      <label className="text-sm text-gray-400">Title</label>
+      <input
+        type="text"
+        value={itemToEdit.title}
+        onChange={(e) => setItemToEdit({ ...itemToEdit, title: e.target.value })}
+        className="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-700 text-white"
+      />
+    </div>
+
+    <div>
+      <label className="text-sm text-gray-400">Author</label>
+      <input
+        type="text"
+        value={itemToEdit.author}
+        onChange={(e) => setItemToEdit({ ...itemToEdit, author: e.target.value })}
+        className="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-700 text-white"
+      />
+    </div>
+
+    <div>
+      <label className="text-sm text-gray-400">Content</label>
+      <textarea
+        value={itemToEdit.content}
+        onChange={(e) => setItemToEdit({ ...itemToEdit, content: e.target.value })}
+        rows="5"
+        className="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-700 text-white"
+      />
+    </div>
+
+    <div className="flex justify-end gap-3 pt-4">
+      <button
+        onClick={() => setShowModal(false)}
+        className="px-4 py-2 bg-white/10 rounded-lg"
+      >
+        Cancel
+      </button>
+
+      <button
+        onClick={() => {
+          setBlogs(blogs.map(b => (b.id === itemToEdit.id ? itemToEdit : b)));
+          setShowModal(false);
+        }}
+        className="px-4 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-lg"
+      >
+        Save Changes
+      </button>
+    </div>
+  </div>
+)}
+{modalType === "deleteBlog" && selectedItem && (
+  <div className="text-gray-300">
+    <p className="pb-4">Delete blog: <strong>{selectedItem.title}</strong>?</p>
+    <div className="flex justify-end gap-3">
+      <button onClick={() => setShowModal(false)} className="px-4 py-2 bg-white/10 rounded">
+        Cancel
+      </button>
+      <button
+        onClick={() => handleDeleteBlog(selectedItem.id)}
+        className="px-4 py-2 bg-red-600 text-white rounded"
+      >
+        Delete
       </button>
     </div>
   </div>
