@@ -56,7 +56,7 @@ const DashboardAdmin = () => {
   const [memberFilters, setMemberFilters] = useState({
     status: 'all',
     subscription: 'all',
-    college: 'all',
+    city: 'all',
   });
 
   // Contact Management States
@@ -78,60 +78,65 @@ const DashboardAdmin = () => {
   const [newEvent, setNewEvent] = useState({ name: "", club: "", date: "" });
 
   // Mock data - replace with API calls
-  const [members, setMembers] = useState([
-    {
-      id: 1,
-      name: "Riya Sharma",
-      email: "riya@gmail.com",
-      college: "MIT",
-      phone: "+91 9876543210",
-      status: "Active",
-      subscription: "Yearly",
-      joinDate: "2025-01-15",
-      avatar: "https://i.pravatar.cc/150?img=1",
-      joinedClubs: ["Tech Innovators", "Art Fusion"],
-      joinedEvents: ["Tech Expo 2025"],
-    },
-    {
-      id: 2,
-      name: "Arjun Mehta",
-      email: "arjun@gmail.com",
-      college: "PCCOE",
-      phone: "+91 9876543211",
-      status: "Pending",
-      subscription: "Monthly",
-      joinDate: "2025-10-20",
-      avatar: "https://i.pravatar.cc/150?img=2",
-      joinedClubs: ["Art Fusion"],
-      joinedEvents: [],
-    },
-    {
-      id: 3,
-      name: "Priya Desai",
-      email: "priya@gmail.com",
-      college: "VIT",
-      phone: "+91 9876543212",
-      status: "Active",
-      subscription: "6-Monthly",
-      joinDate: "2025-03-10",
-      avatar: "https://i.pravatar.cc/150?img=3",
-      joinedClubs: ["Tech Innovators", "Sports Arena"],
-      joinedEvents: ["Tech Expo 2025", "Cultural Fest"],
-    },
-    {
-      id: 4,
-      name: "Suresh Kumar",
-      email: "suresh@gmail.com",
-      college: "COEP",
-      phone: "+91 9876543213",
-      status: "Suspended",
-      subscription: "Yearly",
-      joinDate: "2024-02-20",
-      avatar: "https://i.pravatar.cc/150?img=4",
-      joinedClubs: ["Sports Arena"],
-      joinedEvents: ["Sports Championship"],
-    },
-  ]);
+ const [members, setMembers] = useState([
+  {
+    id: 1,
+    name: "Riya Sharma",
+    email: "riya@gmail.com",
+    college: "MIT",
+    city: "Pune",
+    phone: "+91 9876543210",
+    status: "Active",
+    subscription: "Yearly",
+    joinDate: "2025-01-15",
+    avatar: "https://i.pravatar.cc/150?img=1",
+    joinedClubs: ["Tech Innovators", "Art Fusion"],
+    joinedEvents: ["Tech Expo 2025"],
+  },
+  {
+    id: 2,
+    name: "Arjun Mehta",
+    email: "arjun@gmail.com",
+    college: "PCCOE",
+    city: "Pune",
+    phone: "+91 9876543211",
+    status: "Pending",
+    subscription: "Monthly",
+    joinDate: "2025-10-20",
+    avatar: "https://i.pravatar.cc/150?img=2",
+    joinedClubs: ["Art Fusion"],
+    joinedEvents: [],
+  },
+  {
+    id: 3,
+    name: "Priya Desai",
+    email: "priya@gmail.com",
+    college: "VIT",
+    city: "Mumbai",
+    phone: "+91 9876543212",
+    status: "Active",
+    subscription: "6-Monthly",
+    joinDate: "2025-03-10",
+    avatar: "https://i.pravatar.cc/150?img=3",
+    joinedClubs: ["Tech Innovators", "Sports Arena"],
+    joinedEvents: ["Tech Expo 2025", "Cultural Fest"],
+  },
+  {
+    id: 4,
+    name: "Suresh Kumar",
+    email: "suresh@gmail.com",
+    college: "COEP",
+    city: "Pune",
+    phone: "+91 9876543213",
+    status: "Suspended",
+    subscription: "Yearly",
+    joinDate: "2024-02-20",
+    avatar: "https://i.pravatar.cc/150?img=4",
+    joinedClubs: ["Sports Arena"],
+    joinedEvents: ["Sports Championship"],
+  },
+]);
+
 
   const [clubs, setClubs] = useState([
     { 
@@ -199,6 +204,7 @@ const DashboardAdmin = () => {
       likes: 89,
       status: "Published",
       category: "Technology",
+      content: "This is a full blog content for Future of AI...",
     },
     {
       id: 2,
@@ -210,6 +216,7 @@ const DashboardAdmin = () => {
       likes: 67,
       status: "Published",
       category: "Community",
+      content: "This is the full blog writing...",
     },
     {
       id: 3,
@@ -221,6 +228,7 @@ const DashboardAdmin = () => {
       likes: 34,
       status: "Draft",
       category: "Art",
+      content: "Art therapy has various benefits...",
     },
   ]);
 
@@ -369,6 +377,23 @@ const DashboardAdmin = () => {
     setNewEvent({ name: "", club: "", date: "" });
   };
 
+  // ARCHIVE / UNARCHIVE BLOG
+  const handleArchiveBlog = (id) => {
+    setBlogs(prev =>
+      prev.map(blog =>
+        blog.id === id
+          ? { ...blog, status: blog.status === "Published" ? "Draft" : "Published" }
+          : blog
+      )
+    );
+  };
+  
+  // DELETE BLOG
+  const handleDeleteBlog = (id) => {
+    setBlogs(prev => prev.filter(blog => blog.id !== id));
+    setShowModal(false);
+  };
+
   const handleMemberStatusChange = (memberId, newStatus) => {
     setMembers(members.map(m => (m.id === memberId ? { ...m, status: newStatus } : m)));
   };
@@ -482,121 +507,155 @@ const DashboardAdmin = () => {
   );
 
   // ======================== MEMBERS SECTION ========================
-  const renderMembers = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <h2 className="text-2xl font-bold text-white">Member Management</h2>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search members..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg"
-            />
+  const renderMembers = () => {
+    // Filter members based on search and filters
+    let filteredMembers = members.filter(m => {
+      const matchesSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           m.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = memberFilters.status === 'all' || m.status.toLowerCase() === memberFilters.status;
+      const matchesSubscription = memberFilters.subscription === 'all' || m.subscription.toLowerCase().includes(memberFilters.subscription);
+      const matchesCity = memberFilters.city === 'all' || m.city === memberFilters.city;
+      return matchesSearch && matchesStatus && matchesSubscription && matchesCity;
+    });
+
+    // Group members by city
+    const membersByCity = filteredMembers.reduce((acc, member) => {
+      const city = member.city;
+      if (!acc[city]) {
+        acc[city] = [];
+      }
+      acc[city].push(member);
+      return acc;
+    }, {});
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <h2 className="text-2xl font-bold text-white">Member Management</h2>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search members..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg"
+              />
+            </div>
+            <button
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="p-2 hover:bg-white/10 rounded-lg"
+            >
+              <Filter className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            onClick={() => setFilterOpen(!filterOpen)}
-            className="p-2 hover:bg-white/10 rounded-lg"
-          >
-            <Filter className="w-5 h-5" />
-          </button>
         </div>
-      </div>
 
-      {filterOpen && (
-        <div className="grid grid-cols-3 gap-4 p-4 bg-white/5 rounded-lg">
-          <select
-            value={memberFilters.status}
-            onChange={(e) => setMemberFilters({...memberFilters, status: e.target.value})}
-            className="px-3 py-2 bg-black/20 border border-white/10 rounded-lg"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="pending">Pending</option>
-            <option value="suspended">Suspended</option>
-          </select>
-          <select
-            value={memberFilters.subscription}
-            onChange={(e) => setMemberFilters({...memberFilters, subscription: e.target.value})}
-            className="px-3 py-2 bg-black/20 border border-white/10 rounded-lg"
-          >
-            <option value="all">All Plans</option>
-            <option value="monthly">Monthly</option>
-            <option value="yearly">Yearly</option>
-          </select>
-          <select
-            value={memberFilters.college}
-            onChange={(e) => setMemberFilters({...memberFilters, college: e.target.value})}
-            className="px-3 py-2 bg-black/20 border border-white/10 rounded-lg"
-          >
-            <option value="all">All Colleges</option>
-            <option value="MIT">MIT</option>
-            <option value="PCCOE">PCCOE</option>
-          </select>
-        </div>
-      )}
+        {filterOpen && (
+          <div className="grid grid-cols-3 gap-4 p-4 bg-white/5 rounded-lg">
+            <select
+              value={memberFilters.status}
+              onChange={(e) => setMemberFilters({...memberFilters, status: e.target.value})}
+              className="px-3 py-2 bg-black/20 border border-white/10 rounded-lg"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+              <option value="suspended">Suspended</option>
+            </select>
+            <select
+              value={memberFilters.subscription}
+              onChange={(e) => setMemberFilters({...memberFilters, subscription: e.target.value})}
+              className="px-3 py-2 bg-black/20 border border-white/10 rounded-lg"
+            >
+              <option value="all">All Plans</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+           <select
+  value={memberFilters.city}
+  onChange={(e) => setMemberFilters({ ...memberFilters, city: e.target.value })}
+  className="px-3 py-2 bg-black/20 border border-white/10 rounded-lg"
+>
+  <option value="all">All Cities</option>
+  {[...new Set(members.map(m => m.city))].map(city => (
+    <option key={city} value={city}>{city}</option>
+  ))}
+</select>
+          </div>
+        )}
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {members.map((member) => (
-          <div key={member.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <img src={member.avatar} alt={member.name} className="w-16 h-16 rounded-full" />
-              <div>
-                <h3 className="text-lg font-bold text-white">{member.name}</h3>
-                <p className="text-sm text-gray-400">{member.college}</p>
-              </div>
+        {/* Display members grouped by city */}
+        {Object.entries(membersByCity).map(([city, cityMembers]) => (
+          <div key={city} className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Building2 className="w-5 h-5 text-violet-400" />
+              <h3 className="text-xl font-bold text-white">{city}</h3>
+              <span className="px-3 py-1 bg-violet-600/20 text-violet-300 rounded-full text-sm font-semibold">
+                {cityMembers.length} {cityMembers.length === 1 ? 'member' : 'members'}
+              </span>
             </div>
             
-            <div className="space-y-2 text-sm mb-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Email:</span>
-                <span>{member.email}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Phone:</span>
-                <span>{member.phone}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Status:</span>
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                  member.status === "Active" ? "bg-green-500/20 text-green-300" :
-                  member.status === "Pending" ? "bg-yellow-500/20 text-yellow-300" :
-                  "bg-red-500/20 text-red-300"
-                }`}>{member.status}</span>
-              </div>
-            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {cityMembers.map((member) => (
+                <div key={member.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <img src={member.avatar} alt={member.name} className="w-16 h-16 rounded-full" />
+                    <div>
+                      <h3 className="text-lg font-bold text-white">{member.name}</h3>
+                      <p className="text-sm text-gray-400">{member.college}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm mb-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Email:</span>
+                      <span className="text-xs">{member.email}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Phone:</span>
+                      <span className="text-xs">{member.phone}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Status:</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        member.status === "Active" ? "bg-green-500/20 text-green-300" :
+                        member.status === "Pending" ? "bg-yellow-500/20 text-yellow-300" :
+                        "bg-red-500/20 text-red-300"
+                      }`}>{member.status}</span>
+                    </div>
+                  </div>
 
-            <div className="flex gap-2">
-              <button onClick={() => { setSelectedItem(member); setModalType("viewMember"); setShowModal(true); }} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-violet-600/50 text-white rounded-lg hover:bg-violet-600">
-                <Eye className="w-4 h-4" /> View
-              </button>
-              {member.status === "Pending" && (
-                <button onClick={() => handleMemberStatusChange(member.id, "Active")} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-600/50 text-white rounded-lg hover:bg-green-600">
-                  <Check className="w-4 h-4" /> Approve
-                </button>
-              )}
-              {member.status === "Active" && (
-                <button onClick={() => handleMemberStatusChange(member.id, "Suspended")} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-yellow-600/50 text-white rounded-lg hover:bg-yellow-600">
-                  <UserX className="w-4 h-4" /> Suspend
-                </button>
-              )}
-              {member.status === "Suspended" && (
-                <button onClick={() => handleMemberStatusChange(member.id, "Active")} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-600/50 text-white rounded-lg hover:bg-green-600">
-                  <UserCheck className="w-4 h-4" /> Activate
-                </button>
-              )}
-              <button onClick={() => { setSelectedItem(member); setModalType("confirmDelete"); setShowModal(true); }} className="p-2 bg-red-600/50 text-white rounded-lg hover:bg-red-600">
-                <Trash2 className="w-4 h-4" />
-              </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => { setSelectedItem(member); setModalType("viewMember"); setShowModal(true); }} 
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-violet-600/50 text-white rounded-lg hover:bg-violet-600"
+                    >
+                      <Eye className="w-4 h-4" /> View
+                    </button>
+                    <button 
+                      onClick={() => { setSelectedItem(member); setModalType("confirmDelete"); setShowModal(true); }} 
+                      className="p-2 bg-red-600/50 text-white rounded-lg hover:bg-red-600"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         ))}
+
+        {Object.keys(membersByCity).length === 0 && (
+          <div className="text-center py-12 text-gray-400">
+            <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
+            <p className="text-lg">No members found</p>
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   // ======================== CLUBS SECTION ========================
   const renderClubs = () => {
@@ -748,16 +807,42 @@ const DashboardAdmin = () => {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <button className="p-2 text-blue-400 hover:bg-white/10 rounded">
+                    <button
+                      onClick={() => {
+                        setSelectedItem(blog);
+                        setModalType("viewBlog");
+                        setShowModal(true);
+                      }}
+                      className="p-2 text-blue-400 hover:bg-white/10 rounded"
+                    >
                       <Eye className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-yellow-400 hover:bg-white/10 rounded">
+                    <button
+                      onClick={() => {
+                        setItemToEdit(blog);
+                        setModalType("editBlog");
+                        setShowModal(true);
+                      }}
+                      className="p-2 text-yellow-400 hover:bg-white/10 rounded"
+                    >
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-gray-400 hover:bg-white/10 rounded">
+                    <button
+                      onClick={() => {
+                        handleArchiveBlog(blog.id);
+                      }}
+                      className="p-2 text-gray-400 hover:bg-white/10 rounded"
+                    >
                       <Archive className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-red-400 hover:bg-white/10 rounded">
+                    <button
+                      onClick={() => {
+                        setSelectedItem(blog);
+                        setModalType("deleteBlog");
+                        setShowModal(true);
+                      }}
+                      className="p-2 text-red-400 hover:bg-white/10 rounded"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -1040,7 +1125,10 @@ const DashboardAdmin = () => {
             modalType === "viewMember" ? "Member Details" :
             modalType === "editMember" ? "Edit Member" :
             modalType === "confirmDelete" ? "Confirm Deletion" :
-            modalType === "viewContact" ? "Contact Message" : "Details"
+            modalType === "viewContact" ? "Contact Message" :
+            modalType === "viewBlog" ? "View Blog" :
+            modalType === "editBlog" ? "Edit Blog" :
+            modalType === "deleteBlog" ? "Delete Blog" : "Details"
           }
           onClose={() => setShowModal(false)}
         >
@@ -1149,6 +1237,15 @@ const DashboardAdmin = () => {
                 <div><label className="block text-sm font-medium text-gray-400 mb-1">Name</label><input type="text" value={itemToEdit.name} onChange={e => setItemToEdit({ ...itemToEdit, name: e.target.value })} className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white" /></div>
                 <div><label className="block text-sm font-medium text-gray-400 mb-1">Email</label><input type="email" value={itemToEdit.email} onChange={e => setItemToEdit({ ...itemToEdit, email: e.target.value })} className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white" /></div>
                 <div><label className="block text-sm font-medium text-gray-400 mb-1">College</label><input type="text" value={itemToEdit.college} onChange={e => setItemToEdit({ ...itemToEdit, college: e.target.value })} className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white" /></div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">City</label>
+                  <input 
+                    type="text" 
+                    value={itemToEdit.city || ""} 
+                    onChange={e => setItemToEdit({ ...itemToEdit, city: e.target.value })} 
+                    className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white" 
+                  />
+                </div>
                 <div className="flex justify-end gap-3 pt-4">
                   <button onClick={() => { setModalType("viewMember"); setSelectedItem(itemToEdit); setItemToEdit(null); }} className="px-4 py-2 bg-white/10 text-gray-300 rounded-lg font-semibold">Cancel</button>
                   <button onClick={() => { setMembers(members.map(m => m.id === itemToEdit.id ? itemToEdit : m)); setSelectedItem(itemToEdit); setModalType("viewMember"); setItemToEdit(null); }} className="px-4 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-lg font-semibold">Save Changes</button>
@@ -1164,6 +1261,24 @@ const DashboardAdmin = () => {
               </div>
             </div>
           )}
+          {modalType === "viewBlog" && selectedItem && (
+  <div className="space-y-4 text-gray-300">
+    <h3 className="text-2xl font-bold text-white">{selectedItem.title}</h3>
+    <p className="text-sm text-gray-400">By {selectedItem.author}</p>
+    <p className="text-sm text-gray-500">Club: {selectedItem.club}</p>
+    <p className="text-sm text-gray-500">Date: {selectedItem.date}</p>
+
+    <div className="p-4 bg-black/20 rounded-lg border border-white/10">
+      {selectedItem.content}
+    </div>
+
+    <div className="flex justify-end pt-4">
+      <button onClick={() => setShowModal(false)} className="px-4 py-2 bg-white/10 rounded-lg">
+        Close
+      </button>
+    </div>
+  </div>
+)}
           {(modalType === "viewClub" || modalType === "viewEvent") && (
             <div className="text-gray-300">
               <h4 className="text-lg font-semibold text-white mb-2">{selectedItem?.name}</h4>
