@@ -61,12 +61,16 @@ export const createApiClient = (token = null) => {
 
     const fetchWithAuth = async (url, options = {}) => {
         try {
+            // If sending FormData, let the browser set Content-Type (boundary)
+            const mergedHeaders = { ...headers, ...options.headers };
+            if (options.body instanceof FormData) {
+                // remove content-type so browser can set it correctly
+                delete mergedHeaders['Content-Type'];
+            }
+
             const response = await fetch(url, {
                 ...options,
-                headers: {
-                    ...headers,
-                    ...options.headers
-                }
+                headers: mergedHeaders
             });
 
             const data = await response.json();
@@ -96,10 +100,15 @@ export const createApiClient = (token = null) => {
             })
         },
         member: {
-            updateProfile: (data) => fetchWithAuth(API.member.profile, {
-                method: 'PUT',
-                body: JSON.stringify(data)
-            }),
+            updateProfile: (data) => {
+                const options = { method: 'PUT' };
+                if (data instanceof FormData) {
+                    options.body = data;
+                } else {
+                    options.body = JSON.stringify(data);
+                }
+                return fetchWithAuth(API.member.profile, options);
+            },
             registerForEvent: (eventId) => fetchWithAuth(API.member.events.register, {
                 method: 'POST',
                 body: JSON.stringify({ eventId })
@@ -131,10 +140,15 @@ export const createApiClient = (token = null) => {
             getBlogs: () => fetchWithAuth(API.club.blogs.list)
         },
         admin: {
-            updateProfile: (data) => fetchWithAuth(API.admin.profile, {
-                method: 'PUT',
-                body: JSON.stringify(data)
-            }),
+            updateProfile: (data) => {
+                const options = { method: 'PUT' };
+                if (data instanceof FormData) {
+                    options.body = data;
+                } else {
+                    options.body = JSON.stringify(data);
+                }
+                return fetchWithAuth(API.admin.profile, options);
+            },
             getAllMembers: () => fetchWithAuth(API.admin.members.list),
             updateMemberStatus: (memberId, action) => fetchWithAuth(API.admin.members.updateStatus, {
                 method: 'PUT',
@@ -145,10 +159,30 @@ export const createApiClient = (token = null) => {
                 method: 'PUT',
                 body: JSON.stringify({ clubId, action })
             }),
-            createBlog: (blogData) => fetchWithAuth(API.admin.blogs.create, {
-                method: 'POST',
-                body: JSON.stringify(blogData)
-            }),
+            createBlog: (blogData) => {
+                // if FormData (multipart) was passed, send as-is
+                const options = { method: 'POST' };
+                if (blogData instanceof FormData) {
+                    options.body = blogData;
+                    // ensure we don't force Content-Type header (browser will set boundary)
+                    options.headers = { ...(options.headers || {}), 'Content-Type': undefined };
+                } else {
+                    options.body = JSON.stringify(blogData);
+                }
+                return fetchWithAuth(API.admin.blogs.create, options);
+            },
+            updateBlog: (id, blogData) => {
+                const url = `${API.admin.blogs.create}/${id}`;
+                const options = { method: 'PUT' };
+                if (blogData instanceof FormData) {
+                    options.body = blogData;
+                    options.headers = { ...(options.headers || {}), 'Content-Type': undefined };
+                } else {
+                    options.body = JSON.stringify(blogData);
+                }
+                return fetchWithAuth(url, options);
+            },
+            deleteBlog: (id) => fetchWithAuth(`${API.admin.blogs.create}/${id}`, { method: 'DELETE' }),
             getContactSubmissions: (filters) => fetchWithAuth(`${API.admin.contacts.list}?${new URLSearchParams(filters)}`),
             updateContactStatus: (contactId, status, adminNotes) => fetchWithAuth(API.admin.contacts.updateStatus, {
                 method: 'PUT',

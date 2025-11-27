@@ -19,8 +19,15 @@ const memberApi = {
   updateProfile: async (profileData) => {
     try {
       const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      // If sending FormData, let axios set Content-Type with boundary
+      if (profileData instanceof FormData) {
+        const response = await axios.put(`${API_BASE_URL}/member/profile`, profileData, { headers });
+        return response.data;
+      }
+
       const response = await axios.put(`${API_BASE_URL}/member/profile`, profileData, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { ...headers }
       });
       return response.data;
     } catch (error) {
@@ -62,21 +69,10 @@ const memberApi = {
     }
   },
 
-  // Create new club
+  // Create new club - disabled for members
   createClub: async (clubData) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API_BASE_URL}/member/clubs/create`,
-        clubData,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Failed to create club' };
-    }
+    // Members are not allowed to create clubs. This API is intentionally disabled on the client.
+    throw { message: 'Members are not allowed to create clubs. Please contact an administrator.' };
   },
 
   // Get member's registered events

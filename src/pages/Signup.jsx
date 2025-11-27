@@ -322,11 +322,7 @@ const Signup = () => {
                 </select>
               </div>
             )}
-            <div className="text-center text-sm text-gray-400">
-              <Link to="/admin-signup" className="font-medium text-violet-400 hover:text-violet-300 transition-colors">
-                Admin Signup
-              </Link>
-            </div>
+            {/* Admin signup removed — admins must be created by system administrators */}
           </div>
 
           <div>

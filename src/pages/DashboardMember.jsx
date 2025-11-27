@@ -279,7 +279,7 @@ const DashboardMember = () => {
     if (!newPost.title || !newPost.content) return;
 
     try {
-      const response = await memberApi.createBlogPost({
+      await memberApi.createBlogPost({
         title: newPost.title,
         content: newPost.content,
         image: newPost.image,
@@ -309,14 +309,14 @@ const DashboardMember = () => {
   };
 
   const renderSection = () => {
-    switch (activeSection) {
-      case "Dashboard":
+      switch (activeSection) {
+         case "Dashboard":
         return <DashboardOverview profileData={profileData} posts={posts} allEvents={allEvents} allClubs={allClubs} />;
-      case "Profile":
+         case "Profile":
         return <ProfileSection profileData={profileData} setProfileData={setProfileData} startEditing={profileEditMode} onEditingDone={() => setProfileEditMode(false)} />;
       case "My Posts":
-        return <PostsSection posts={posts} showCreatePost={showCreatePost} setShowCreatePost={setShowCreatePost} newPost={newPost} setNewPost={setNewPost} />;
-      case "Events":
+        return <PostsSection posts={posts} setShowCreatePost={setShowCreatePost} />;
+         case "Events":
         if (selectedEventId) {
           const event = allEvents.find(e => e.id === selectedEventId);
           return <EventDetails 
@@ -345,21 +345,20 @@ const DashboardMember = () => {
           return <ClubDetails club={club} onBack={() => setSelectedClubId(null)} />;
         }
         return <ClubsSection 
-                  clubs={allClubs} 
-                  onClubClick={setSelectedClubId} 
-                  setShowCreateClub={setShowCreateClub} 
-                  clubMemberships={clubMemberships}
-                  handleClubJoinRequest={handleClubJoinRequest}
-                  activeTab={clubTab}
-                  setActiveTab={setClubTab} />;
-      case "Contact":
+            clubs={allClubs} 
+            onClubClick={setSelectedClubId} 
+            clubMemberships={clubMemberships}
+            handleClubJoinRequest={handleClubJoinRequest}
+            activeTab={clubTab}
+            setActiveTab={setClubTab} />;
+         case "Contact":
         return <ContactSection />;
-      default:
+         default:
         return <DashboardOverview profileData={profileData} posts={posts} allEvents={allEvents} allClubs={allClubs} />;
-    }
-  };
+      }
+   };
 
-  return (
+   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-violet-950 text-white relative font-sans">
       {/* Background Spline and Glow Effects */}
       <div className="fixed inset-0 z-0 opacity-30">
@@ -371,24 +370,24 @@ const DashboardMember = () => {
       </div>
 
       <div className="relative z-10 flex min-h-screen">
-      {/* Sidebar */}
+         {/* Sidebar */}
       <aside className="w-64 bg-black/40 backdrop-blur-xl text-slate-200 flex flex-col shadow-2xl border-r border-blue-500/20">
-        <div className="p-6 border-b border-white/10">
-          <div className="flex items-center gap-3">
+            <div className="p-6 border-b border-white/10">
+               <div className="flex items-center gap-3">
             <div className="bg-gradient-to-br from-blue-500 to-violet-500 p-2 rounded-lg shadow-lg shadow-blue-500/50">
-              <Users className="w-6 h-6" />
-            </div>
-            <div>
+                     <Users className="w-6 h-6" />
+                  </div>
+                  <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Spectra</h1>
               <p className="text-xs text-gray-400">Member Portal</p>
             </div>
-          </div>
-        </div>
-        <nav className="flex-grow overflow-y-auto">
-          <ul className="space-y-1 p-3">
-            {sidebarItems.map((item) => (
-              <li key={item.name}>
-                <button
+               </div>
+            </div>
+            <nav className="flex-grow overflow-y-auto">
+               <ul className="space-y-1 p-3">
+                  {sidebarItems.map((item) => (
+                     <li key={item.name}>
+                        <button
                   onClick={
                     item.name === "Logout"
                       ? handleLogout
@@ -398,20 +397,20 @@ const DashboardMember = () => {
                           if (item.name === "Clubs") setSelectedClubId(null);
                         }
                   }
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
-                    activeSection === item.name
-                      ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg"
-                      : "hover:bg-white/10 text-slate-400 hover:text-white"
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.name}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div className="p-4 border-t border-white/10">
+                           className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
+                              activeSection === item.name
+                                 ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg"
+                                 : "hover:bg-white/10 text-slate-400 hover:text-white"
+                           }`}
+                        >
+                           <item.icon className="w-5 h-5" />
+                           <span className="font-medium">{item.name}</span>
+                        </button>
+                     </li>
+                  ))}
+               </ul>
+            </nav>
+            <div className="p-4 border-t border-white/10">
           <div className="flex items-center gap-3 mb-3">
             <img src={profileData.avatar} alt="Profile" className="w-10 h-10 rounded-full" />
             <div className="flex-1 min-w-0">
@@ -426,15 +425,15 @@ const DashboardMember = () => {
               </button>
             </div>
           </div>
-        </div>
-      </aside>
+            </div>
+         </aside>
 
-      {/* Main Content */}
+         {/* Main Content */}
       <main className="flex-1 overflow-y-auto bg-black/20">
-        <div className="max-w-7xl mx-auto p-6 md:p-8">
-          {renderSection()}
-        </div>
-      </main>
+            <div className="max-w-7xl mx-auto p-6 md:p-8">
+               {renderSection()}
+            </div>
+         </main>
 
       {/* Create Post Modal */}
       {showCreatePost && (
@@ -565,8 +564,8 @@ const DashboardMember = () => {
         </div>
       )}
       </div>
-    </div>
-  );
+      </div>
+   );
 };
 
 const DashboardOverview = ({ profileData, posts, allEvents, allClubs }) => (
@@ -632,32 +631,59 @@ const ProfileSection = ({ profileData, setProfileData, startEditing = false, onE
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => {
-      setFormData(prev => ({ ...prev, avatar: reader.result }));
+      // store both file (for upload) and preview (data URL) for UI
+      setFormData(prev => ({ ...prev, avatarPreview: reader.result, avatarFile: file }));
     };
     reader.readAsDataURL(file);
   };
 
   const handleSave = async () => {
     try {
-      const payload = {
-        fullName: formData.name,
-        collegeName: formData.college,
-        bio: formData.bio,
-        phone: formData.phone,
-        socialLinks: {
-          linkedin: formData.linkedin,
-          instagram: formData.instagram,
-          twitter: formData.twitter,
-        }
-      };
-      if (formData.avatar) payload.avatar = formData.avatar;
+      // If a file was chosen, upload as FormData to avoid sending large base64 JSON
+      let payload;
+      if (formData.avatarFile instanceof File) {
+        payload = new FormData();
+        payload.append('fullName', formData.name || '');
+        payload.append('collegeName', formData.college || '');
+        payload.append('bio', formData.bio || '');
+        payload.append('phone', formData.phone || '');
+        payload.append('socialLinks', JSON.stringify({ linkedin: formData.linkedin || '', instagram: formData.instagram || '', twitter: formData.twitter || '' }));
+        payload.append('avatar', formData.avatarFile);
+      } else {
+        payload = {
+          fullName: formData.name,
+          collegeName: formData.college,
+          bio: formData.bio,
+          phone: formData.phone,
+          socialLinks: {
+            linkedin: formData.linkedin,
+            instagram: formData.instagram,
+            twitter: formData.twitter,
+          }
+        };
+        if (formData.avatarPreview) payload.avatar = formData.avatarPreview;
+      }
 
       const response = await memberApi.updateProfile(payload);
 
-      if (response.success) {
-        setProfileData(formData);
+      if (response && response.success && response.data) {
+        const updatedUser = response.data;
+        setProfileData({
+          name: updatedUser.fullName || formData.name,
+          email: updatedUser.email || profileData.email,
+          college: updatedUser.collegeName || formData.college,
+          avatar: updatedUser.avatar || formData.avatarPreview || formData.avatar || profileData.avatar,
+          bio: updatedUser.bio || formData.bio,
+          phone: updatedUser.phone || formData.phone,
+          isCollegeIdVerified: updatedUser.isCollegeIdVerified || profileData.isCollegeIdVerified,
+          isPhoneVerified: updatedUser.phoneVerified || profileData.isPhoneVerified,
+          linkedin: updatedUser.socialLinks?.linkedin || formData.linkedin,
+          instagram: updatedUser.socialLinks?.instagram || formData.instagram,
+          twitter: updatedUser.socialLinks?.twitter || formData.twitter,
+        });
+
         toast.success("Profile updated successfully!");
-        localStorage.setItem("user", JSON.stringify(response.user));
+        localStorage.setItem("user", JSON.stringify(updatedUser));
         setIsEditing(false);
         if (typeof onEditingDone === 'function') onEditingDone();
       }
@@ -680,7 +706,7 @@ const ProfileSection = ({ profileData, setProfileData, startEditing = false, onE
       <div className="bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-2xl max-w-4xl">
         <div className="flex flex-col md:flex-row items-center gap-6">
           <div className="relative">
-            <img src={formData.avatar} alt="Profile" className="w-32 h-32 rounded-full border-4 border-violet-500/50 object-cover" />
+            <img src={formData.avatarPreview || formData.avatar} alt="Profile" className="w-32 h-32 rounded-full border-4 border-violet-500/50 object-cover" />
             {isEditing && (
               <div className="absolute bottom-1 right-1">
                 <label className="bg-white/90 text-violet-600 p-2 rounded-full shadow-md hover:bg-white cursor-pointer">
@@ -766,7 +792,7 @@ const ProfileSection = ({ profileData, setProfileData, startEditing = false, onE
   );
 };
 
-const PostsSection = ({ posts, showCreatePost, setShowCreatePost, newPost, setNewPost }) => (
+const PostsSection = ({ posts, setShowCreatePost }) => (
   <div className="space-y-6">
     <div className="flex justify-between items-center">
       <h2 className="text-3xl font-bold text-white">My Posts</h2>
@@ -799,7 +825,8 @@ const PostsSection = ({ posts, showCreatePost, setShowCreatePost, newPost, setNe
 );
 
   // Update the EventsSection component
-  const EventsSection = ({ events, onEventClick, activeTab, setActiveTab, registeredEvents, handleEventRegistration, ...props }) => (
+  const EventsSection = ({ events, onEventClick, activeTab, setActiveTab, registeredEvents, handleEventRegistration }) => {
+    return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-white">Upcoming Events</h2>
       
@@ -870,6 +897,8 @@ const PostsSection = ({ posts, showCreatePost, setShowCreatePost, newPost, setNe
       </div>
     </div>
   );
+};
+
 
 const EventDetails = ({ event, onBack, onRegister, isRegistered }) => (
   <div>
@@ -897,8 +926,9 @@ const EventDetails = ({ event, onBack, onRegister, isRegistered }) => (
   </div>
 );
 
+
   // Update the ClubsSection component
-  const ClubsSection = ({ clubs, onClubClick, setShowCreateClub, clubMemberships, handleClubJoinRequest, activeTab, setActiveTab, ...props }) => (
+  const ClubsSection = ({ clubs, onClubClick, clubMemberships, handleClubJoinRequest, activeTab, setActiveTab }) => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold text-white">Discover Clubs</h2>

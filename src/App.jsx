@@ -10,7 +10,6 @@ import Clubs from "./pages/Clubs";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AdminLogin from "./pages/AdminLogin";
-import AdminSignup from "./pages/AdminSignup";
 
 // Dashboards
 import DashboardMember from "./pages/DashboardMember";
@@ -48,7 +47,6 @@ const AppLayout = () => {
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/admin-signup" element={<AdminSignup />} />
           <Route path="/admin-login" element={<AdminLogin />} />
 
           {/* Protected Routes */}

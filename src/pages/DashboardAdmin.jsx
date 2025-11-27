@@ -1,4 +1,5 @@
 import { useState } from "react";
+import createApiClient from '../utils/api';
 import { useNavigate } from "react-router-dom";
 import Spline from '@splinetool/react-spline';
 import {
@@ -74,9 +75,10 @@ const DashboardAdmin = () => {
     email: "admin@test.com",
     contactNumber: "+1 234-567-8901",
     role: "Admin",
+    avatar: "https://i.pravatar.cc/150?img=8",
   });
   const [newClub, setNewClub] = useState({ name: "", email: "", head: "", headPhone: "" });
-  const [newBlog, setNewBlog] = useState({ title: "", author: "", club: "", content: "" });
+  const [newBlog, setNewBlog] = useState({ title: "", author: "", club: "", content: "", image: null, imagePreview: null });
   const [newEvent, setNewEvent] = useState({ name: "", club: "", date: "" });
 
   // Mock data - replace with API calls
@@ -338,25 +340,48 @@ const DashboardAdmin = () => {
     setNewClub({ name: "", email: "", head: "", headPhone: "" });
   };
 
-  const handleCreateBlog = () => {
+  const handleCreateBlog = async () => {
     if (!newBlog.title) return;
-    setBlogs([
-      ...blogs,
-      {
-        id: Date.now(),
-        title: newBlog.title,
-        author: newBlog.author,
-        content: newBlog.content,
-        club: newBlog.club,
-        date: new Date().toISOString().split("T")[0],
-        views: 0,
-        likes: 0,
-        status: "Draft",
-        category: "New",
-      },
-    ]);
-    setShowModal(false);
-    setNewBlog({ title: "", author: "", club: "", content: "" });
+    try {
+      const token = localStorage.getItem('token');
+      const api = createApiClient(token);
+
+      // prepare form data
+      const formData = new FormData();
+      formData.append('title', newBlog.title);
+      formData.append('content', newBlog.content);
+      formData.append('authorName', newBlog.author || 'Admin');
+      formData.append('club', newBlog.club || '');
+      if (newBlog.image) formData.append('image', newBlog.image);
+
+      const resp = await api.admin.createBlog(formData);
+      if (resp && resp.success) {
+        setBlogs([resp.data, ...blogs]);
+        toast.success('Blog created');
+      } else {
+        toast.success('Blog created locally');
+        setBlogs([
+          ...blogs,
+          {
+            id: Date.now(),
+            title: newBlog.title,
+            author: newBlog.author,
+            content: newBlog.content,
+            club: newBlog.club,
+            date: new Date().toISOString().split("T")[0],
+            views: 0,
+            likes: 0,
+            status: "Draft",
+            category: "New",
+          },
+        ]);
+      }
+
+      setShowModal(false);
+      setNewBlog({ title: "", author: "", club: "", content: "", image: null, imagePreview: null });
+    } catch (e) {
+      toast.error(e.message || 'Failed to create blog');
+    }
   };
 
   const handleCreateEvent = () => {
@@ -381,19 +406,47 @@ const DashboardAdmin = () => {
 
   // ARCHIVE / UNARCHIVE BLOG
   const handleArchiveBlog = (id) => {
-    setBlogs(prev =>
-      prev.map(blog =>
-        blog.id === id
-          ? { ...blog, status: blog.status === "Published" ? "Draft" : "Published" }
-          : blog
-      )
-    );
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const api = createApiClient(token);
+        // Try to toggle status via API
+        const blogToToggle = blogs.find(b => b.id === id || b._id === id);
+        const newStatus = blogToToggle?.status === 'Published' ? 'draft' : 'published';
+        const payload = { status: newStatus };
+        const resp = await api.admin.updateBlog(blogToToggle?._id || blogToToggle?.id, payload);
+        if (resp && resp.success) {
+          setBlogs(prev => prev.map(blog => (blog.id === id || blog._id === id ? resp.data : blog)));
+        } else {
+          // fallback local toggle
+          setBlogs(prev => prev.map(blog => (blog.id === id ? { ...blog, status: blog.status === "Published" ? "Draft" : "Published" } : blog)));
+        }
+      } catch (e) {
+        setBlogs(prev => prev.map(blog => (blog.id === id ? { ...blog, status: blog.status === "Published" ? "Draft" : "Published" } : blog)));
+      }
+    })();
   };
   
   // DELETE BLOG
-  const handleDeleteBlog = (id) => {
-    setBlogs(prev => prev.filter(blog => blog.id !== id));
-    setShowModal(false);
+  const handleDeleteBlog = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const api = createApiClient(token);
+      const resp = await api.admin.deleteBlog(id);
+      if (resp && resp.success) {
+        setBlogs(prev => prev.filter(blog => blog.id !== id && blog._id !== id));
+        toast.success('Blog deleted');
+      } else {
+        // fallback to client-side removal
+        setBlogs(prev => prev.filter(blog => blog.id !== id));
+      }
+    } catch (e) {
+      // if API fails, just remove locally so UI still works
+      setBlogs(prev => prev.filter(blog => blog.id !== id));
+      toast.success('Blog removed locally');
+    } finally {
+      setShowModal(false);
+    }
   };
 
   const handleMemberStatusChange = (memberId, newStatus) => {
@@ -1022,7 +1075,33 @@ const renderBlogs = () => (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-white">Admin Profile & Access</h2>
       <div className="bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-2xl max-w-2xl">
-        <form onSubmit={(e) => { e.preventDefault(); alert('Profile Saved!'); }} className="space-y-6">
+        <form onSubmit={async (e) => {
+            e.preventDefault();
+            try {
+              const token = localStorage.getItem('token');
+              const api = createApiClient(token);
+              // build payload (use FormData if a file was chosen)
+              let payload;
+              if (adminProfile.avatarFile instanceof File) {
+                payload = new FormData();
+                payload.append('fullName', adminProfile.name || '');
+                payload.append('phone', adminProfile.contactNumber || '');
+                payload.append('avatar', adminProfile.avatarFile);
+              } else {
+                payload = {
+                  fullName: adminProfile.name,
+                  phone: adminProfile.contactNumber,
+                  avatar: adminProfile.avatar
+                };
+              }
+              const resp = await api.admin.updateProfile(payload);
+              if (resp && resp.success) {
+                toast.success('Profile updated');
+              }
+            } catch (err) {
+              toast.error(err.message || 'Failed to update profile');
+            }
+          }} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1">Full Name</label>
             <input
@@ -1031,6 +1110,19 @@ const renderBlogs = () => (
               onChange={(e) => setAdminProfile({ ...adminProfile, name: e.target.value })}
               className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">Avatar</label>
+            <div className="flex items-center gap-4">
+              <img src={adminProfile.avatarPreview || adminProfile.avatar} alt="avatar" className="w-12 h-12 rounded-full object-cover" />
+              <input type="file" accept="image/*" onChange={(e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onloadend = () => setAdminProfile(prev => ({ ...prev, avatarPreview: reader.result, avatarFile: file }));
+                reader.readAsDataURL(file);
+              }} />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1">Email Address</label>
@@ -1292,7 +1384,7 @@ const renderBlogs = () => (
     </div>
   </div>
 )}
-{modalType === "editBlog" && itemToEdit && (
+  {modalType === "editBlog" && itemToEdit && (
   <div className="space-y-4 text-gray-300">
     <h3 className="text-xl font-bold text-white">Edit Blog</h3>
 
@@ -1326,6 +1418,18 @@ const renderBlogs = () => (
       />
     </div>
 
+    <div>
+      <label className="block text-sm font-medium text-gray-400 mb-1">Replace image</label>
+      <input type="file" accept="image/*" onChange={(e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onloadend = () => setItemToEdit(prev => ({ ...prev, image: f, imagePreview: reader.result }));
+        reader.readAsDataURL(f);
+      }} />
+      {itemToEdit.imagePreview && <img src={itemToEdit.imagePreview} alt="preview" className="mt-2 w-36 h-24 object-cover rounded" />}
+    </div>
+
     <div className="flex justify-end gap-3 pt-4">
       <button
         onClick={() => setShowModal(false)}
@@ -1335,9 +1439,35 @@ const renderBlogs = () => (
       </button>
 
       <button
-        onClick={() => {
-          setBlogs(blogs.map(b => (b.id === itemToEdit.id ? itemToEdit : b)));
-          setShowModal(false);
+        onClick={async () => {
+          try {
+            const token = localStorage.getItem('token');
+            const api = createApiClient(token);
+
+            // prepare payload
+            let payload;
+            if (itemToEdit.image instanceof File) {
+              payload = new FormData();
+              payload.append('title', itemToEdit.title);
+              payload.append('content', itemToEdit.content);
+              payload.append('authorName', itemToEdit.author);
+              payload.append('club', itemToEdit.club);
+              payload.append('image', itemToEdit.image);
+            } else {
+              payload = { title: itemToEdit.title, content: itemToEdit.content, authorName: itemToEdit.author, club: itemToEdit.club };
+            }
+
+            const resp = await api.admin.updateBlog(itemToEdit.id, payload);
+            if (resp && resp.success) {
+              setBlogs(blogs.map(b => (b.id === itemToEdit.id ? resp.data : b)));
+              toast.success('Blog updated');
+            } else {
+              setBlogs(blogs.map(b => (b.id === itemToEdit.id ? itemToEdit : b)));
+            }
+            setShowModal(false);
+          } catch (e) {
+            toast.error(e.message || 'Failed to update blog');
+          }
         }}
         className="px-4 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-lg"
       >
