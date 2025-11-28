@@ -224,30 +224,7 @@ const DashboardClub = () => {
     },
   ]);
 
-  // Photos/Media Data
-  const [photos, setPhotos] = useState([
-    {
-      id: 1,
-      url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400",
-      caption: "Team meeting",
-      visibility: "Public",
-      uploadDate: "2025-10-28",
-    },
-    {
-      id: 2,
-      url: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=400",
-      caption: "Workshop session",
-      visibility: "Public",
-      uploadDate: "2025-10-27",
-    },
-    {
-      id: 3,
-      url: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400",
-      caption: "Event photo",
-      visibility: "Private",
-      uploadDate: "2025-10-26",
-    },
-  ]);
+  // Photos/Media Data (removed placeholder state — not used)
 
   const sidebarItems = [
     { name: "Dashboard", icon: LayoutDashboard },
@@ -277,10 +254,7 @@ const DashboardClub = () => {
     setEvents(events.filter((e) => e.id !== eventId));
   };
 
-  // Delete Photo
-  const deletePhoto = (photoId) => {
-    setPhotos(photos.filter((p) => p.id !== photoId));
-  };
+  // Delete Photo (unused UI helper removed)
 
   // Blog Modal - add blog to state
   const handlePublishBlog = async () => {
@@ -536,7 +510,7 @@ const DashboardClub = () => {
         {/* Profile Header */}
         <div className="flex flex-col md:flex-row items-center gap-6">
           <div className="relative">
-            <img src={clubProfile.image} alt="Club" className="w-32 h-32 rounded-full border-4 border-violet-500/50 object-cover" />
+            <img src={clubImagePreview || clubProfile.image} alt="Club" className="w-32 h-32 rounded-full border-4 border-violet-500/50 object-cover" />
             <label className="absolute bottom-1 right-1 bg-white/90 text-violet-600 p-2 rounded-full hover:bg-white transition shadow-md cursor-pointer">
               <Upload className="w-4 h-4" />
               <input
@@ -587,7 +561,7 @@ const DashboardClub = () => {
           <h3 className="text-xl font-bold text-white mb-6 border-l-4 border-violet-500 pl-4">Club Head Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex flex-col items-center">
-              <img src={clubProfile.headImage} alt="Head" className="w-24 h-24 rounded-full mb-4 object-cover" />
+              <img src={headImagePreview || clubProfile.headImage} alt="Head" className="w-24 h-24 rounded-full mb-4 object-cover" />
               <label className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/10 text-gray-300 rounded-lg hover:bg-white/20 text-sm cursor-pointer">
                 <Upload className="w-4 h-4" />
                 Update Photo
@@ -1147,6 +1121,44 @@ const renderMembers = () => {
                   placeholder="e.g., tech, ai, webdev"
                   className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white"
                 />
+              </div>
+              {/* Image Upload for Blog */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-400">Feature Image (optional)</label>
+                <div className="flex items-center gap-4">
+                  {newBlog.imagePreview && (
+                    <div className="relative">
+                      <img src={newBlog.imagePreview} alt="Preview" className="w-32 h-20 object-cover rounded-lg" />
+                      <button
+                        type="button"
+                        onClick={() => setNewBlog(prev => ({ ...prev, image: null, imagePreview: null }))}
+                        className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 text-white hover:bg-red-600"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  {!newBlog.imagePreview && (
+                    <label className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg cursor-pointer hover:bg-white/20 transition-colors">
+                      <ImageIcon className="w-5 h-5" />
+                      <span>Upload Feature Image</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files && e.target.files[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setNewBlog(prev => ({ ...prev, image: file, imagePreview: reader.result }));
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
               </div>
               <div className="flex gap-3">
                 <button
