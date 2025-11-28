@@ -944,14 +944,6 @@ const EventDetails = ({ event, onBack, onRegister, isRegistered }) => (
         >
           Discover
         </button>
-        <button 
-          className={`px-4 py-2 rounded-lg ${
-            activeTab === 'joined' ? 'bg-violet-600' : 'bg-white/10'
-          }`}
-          onClick={() => setActiveTab('joined')}
-        >
-          My Clubs
-        </button>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
