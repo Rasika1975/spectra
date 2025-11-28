@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import { useNavigate } from "react-router-dom";
 import Spline from '@splinetool/react-spline';
 import {
@@ -41,9 +43,54 @@ const DashboardClub = () => {
   const [itemToEdit, setItemToEdit] = useState(null);
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
+  // Members filters (moved to top-level so hooks are not used inside renderMembers)
+  const [cityFilter, setCityFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  // Profile image upload helpers
+  const [clubImageFile, setClubImageFile] = useState(null);
+  const [clubImagePreview, setClubImagePreview] = useState(null);
+  const [headImageFile, setHeadImageFile] = useState(null);
+  const [headImagePreview, setHeadImagePreview] = useState(null);
+
+  // Load club profile from backend on mount so changes persist across reloads
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return; // not logged in as club
+        const resp = await axios.get(`${API_BASE_URL}/club/profile`, { headers: { Authorization: `Bearer ${token}` } });
+        if (resp?.data?.success && resp.data.data) {
+          const server = resp.data.data;
+          // Helper to make a correct url for server-saved uploads
+          const resolveImage = (u) => {
+            if (!u) return '';
+            return u.startsWith('http') ? u : `${API_BASE_URL}${u}`;
+          };
+
+          setClubProfile(prev => ({
+            ...prev,
+            name: server.name || server.fullName || prev.name,
+            email: server.email || prev.email,
+            about: server.about || prev.about,
+            links: server.socialLinks || prev.links,
+            headName: server.clubHead?.name || prev.headName,
+            headEmail: server.clubHead?.email || prev.headEmail,
+            headPhone: server.clubHead?.phone || prev.headPhone,
+            image: resolveImage(server.image || server.img || prev.image),
+            headImage: resolveImage(server.headImage || prev.headImage)
+          }));
+        }
+      } catch (err) {
+        console.warn('Failed to load club profile', err?.message || err);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   // Local blog/event form states
-  const [newBlog, setNewBlog] = useState({title:"",content:"", tags: ""});
+  const [newBlog, setNewBlog] = useState({title:"",content:"", tags: "", image: null, imagePreview: null});
   const [newEvent, setNewEvent] = useState({
     name: "",
     date: "",
@@ -236,23 +283,78 @@ const DashboardClub = () => {
   };
 
   // Blog Modal - add blog to state
-  const handlePublishBlog = () => {
+  const handlePublishBlog = async () => {
     if (!newBlog.title) return;
-    setBlogs([
-      ...blogs,
-      {
-        id: Date.now(),
-        title: newBlog.title,
-        content: newBlog.content,
-        tags: newBlog.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        date: new Date().toISOString().substr(0, 10),
-        views: 0,
-        likes: 0,
-        image: newBlog.image || "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400",
-      },
-    ]);
-    setNewBlog({title:"",content:"", tags: ""});
-    setShowModal(false);
+
+    try {
+      const token = localStorage.getItem('token');
+      // Build form data to support image upload
+      const formData = new FormData();
+      formData.append('title', newBlog.title);
+      formData.append('content', newBlog.content);
+      formData.append('tags', newBlog.tags);
+      if (newBlog.image) formData.append('image', newBlog.image);
+
+      const resp = await axios.post(`${API_BASE_URL}/club/blogs`, formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (resp?.data?.success && resp.data.data) {
+        const saved = resp.data.data;
+        // normalize image field
+        const imgUrl = saved.image?.url || saved.image || newBlog.imagePreview || 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400';
+        setBlogs(prev => ([
+          ...prev,
+          {
+            id: saved._id || saved.id || Date.now(),
+            title: saved.title || newBlog.title,
+            content: saved.content || newBlog.content,
+            tags: Array.isArray(saved.tags) ? saved.tags : (saved.tags ? String(saved.tags).split(',').map(t => t.trim()) : []),
+            date: new Date(saved.createdAt || Date.now()).toISOString().substr(0, 10),
+            views: saved.views || 0,
+            likes: saved.likes || 0,
+            image: imgUrl
+          }
+        ]));
+      } else {
+        // fallback to local-only add
+        setBlogs([
+          ...blogs,
+          {
+            id: Date.now(),
+            title: newBlog.title,
+            content: newBlog.content,
+            tags: newBlog.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+            date: new Date().toISOString().substr(0, 10),
+            views: 0,
+            likes: 0,
+            image: newBlog.imagePreview || "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400",
+          },
+        ]);
+      }
+
+      // Reset the create blog form and close modal
+      setNewBlog({ title: '', content: '', tags: '', image: null, imagePreview: null });
+      setShowModal(false);
+    } catch (err) {
+      console.error('Failed to publish blog', err?.message || err);
+      // fallback local add if server fails
+      setBlogs([
+        ...blogs,
+        {
+          id: Date.now(),
+          title: newBlog.title,
+          content: newBlog.content,
+          tags: newBlog.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+          date: new Date().toISOString().substr(0, 10),
+          views: 0,
+          likes: 0,
+          image: newBlog.imagePreview || "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400",
+        },
+      ]);
+      setNewBlog({ title: '', content: '', tags: '', image: null, imagePreview: null });
+      setShowModal(false);
+    }
   };
 
   // Event Modal - add event to state
@@ -269,12 +371,62 @@ const DashboardClub = () => {
     setShowModal(false);
   };
 
-  const handleProfileUpdate = (e) => {
+  const handleProfileUpdate = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-    // Simulate API call
-    console.log("Saving profile:", clubProfile);
-    setTimeout(() => setIsSaving(false), 2000);
+
+    try {
+      const token = localStorage.getItem('token');
+      // Build form data so files can be uploaded (if present). Backend accepts multipart.
+      const formData = new FormData();
+      formData.append('about', clubProfile.about || '');
+      // persist basic fields (name/email) so UI will show them after reload
+      formData.append('fullName', clubProfile.name || '');
+      formData.append('email', clubProfile.email || '');
+      formData.append('socialLinks', JSON.stringify(clubProfile.links || {}));
+      formData.append('clubHead', JSON.stringify({
+        name: clubProfile.headName,
+        email: clubProfile.headEmail,
+        phone: clubProfile.headPhone
+      }));
+
+      if (clubImageFile) formData.append('image', clubImageFile);
+      if (headImageFile) formData.append('headImage', headImageFile);
+
+      // Let the browser/axios set the Content-Type (boundary) for multipart
+      const resp = await axios.put(`${API_BASE_URL}/club/profile`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (resp.data && resp.data.success && resp.data.data) {
+        const updated = resp.data.data;
+        // Normalize fields coming back from server
+        setClubProfile(prev => ({
+          ...prev,
+          name: updated.fullName || updated.name || prev.name,
+          email: updated.email || prev.email,
+          about: updated.about || prev.about,
+          links: updated.socialLinks || prev.links,
+          headName: updated.clubHead?.name || prev.headName,
+          headEmail: updated.clubHead?.email || prev.headEmail,
+          headPhone: updated.clubHead?.phone || prev.headPhone,
+          image: updated.image || prev.image,
+          headImage: updated.headImage || prev.headImage
+        }));
+
+        setClubImageFile(null);
+        setClubImagePreview(null);
+        setHeadImageFile(null);
+        setHeadImagePreview(null);
+      }
+
+      setIsSaving(false);
+    } catch (err) {
+      console.error('Failed to save club profile', err);
+      setIsSaving(false);
+    }
   };
 
   // Remove Member
@@ -385,9 +537,25 @@ const DashboardClub = () => {
         <div className="flex flex-col md:flex-row items-center gap-6">
           <div className="relative">
             <img src={clubProfile.image} alt="Club" className="w-32 h-32 rounded-full border-4 border-violet-500/50 object-cover" />
-            <button type="button" className="absolute bottom-1 right-1 bg-white/90 text-violet-600 p-2 rounded-full hover:bg-white transition shadow-md">
+            <label className="absolute bottom-1 right-1 bg-white/90 text-violet-600 p-2 rounded-full hover:bg-white transition shadow-md cursor-pointer">
               <Upload className="w-4 h-4" />
-            </button>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files && e.target.files[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setClubImageFile(file);
+                    setClubImagePreview(reader.result);
+                    setClubProfile(prev => ({ ...prev, image: reader.result }));
+                  };
+                  reader.readAsDataURL(file);
+                }}
+              />
+            </label>
           </div>
           <div className="text-center md:text-left">
             <h2 className="text-4xl font-bold text-white">{clubProfile.name}</h2>
@@ -420,10 +588,21 @@ const DashboardClub = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex flex-col items-center">
               <img src={clubProfile.headImage} alt="Head" className="w-24 h-24 rounded-full mb-4 object-cover" />
-              <button type="button" className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/10 text-gray-300 rounded-lg hover:bg-white/20 text-sm">
+              <label className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/10 text-gray-300 rounded-lg hover:bg-white/20 text-sm cursor-pointer">
                 <Upload className="w-4 h-4" />
                 Update Photo
-              </button>
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                  const file = e.target.files && e.target.files[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setHeadImageFile(file);
+                    setHeadImagePreview(reader.result);
+                    setClubProfile(prev => ({ ...prev, headImage: reader.result }));
+                  };
+                  reader.readAsDataURL(file);
+                }} />
+              </label>
             </div>
             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -479,12 +658,10 @@ const DashboardClub = () => {
 const renderMembers = () => {
   // You already have members state, searchTerm state, and handleMemberAction, removeMember handlers
 
-  // State for filters
-  const [cityFilter, setCityFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  // NOTE: filter state is at top-level (moved) so we don't use hooks inside renderMembers
 
   // Get unique cities from members
-  const cities = [...new Set(members.map(m => m.college.split(',').pop().trim()))].sort();
+  const cities = [...new Set(members.map(m => m.college ? m.college.split(',').pop().trim() : 'Unknown'))].sort();
 
   // Filtered members: by name, city and status
   const filteredMembers = members.filter((m) => {

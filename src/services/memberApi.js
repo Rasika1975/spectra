@@ -11,7 +11,8 @@ const memberApi = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to fetch profile' };
+      const msg = error?.response?.data?.message || error?.message || 'Failed to fetch profile';
+      throw new Error(msg);
     }
   },
 
@@ -31,7 +32,8 @@ const memberApi = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to update profile' };
+      const msg = error?.response?.data?.message || error?.message || 'Failed to update profile';
+      throw new Error(msg);
     }
   },
 
@@ -48,7 +50,8 @@ const memberApi = {
       );
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to register for event' };
+      const msg = error?.response?.data?.message || error?.message || 'Failed to register for event';
+      throw new Error(msg);
     }
   },
 
@@ -65,7 +68,8 @@ const memberApi = {
       );
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to send join request' };
+      const msg = error?.response?.data?.message || error?.message || 'Failed to send join request';
+      throw new Error(msg);
     }
   },
 
@@ -84,20 +88,27 @@ const memberApi = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to fetch registered events' };
+      const msg = error?.response?.data?.message || error?.message || 'Failed to fetch registered events';
+      throw new Error(msg);
     }
   },
 
   // Get member's club memberships
   getClubMemberships: async () => {
+    // Backend does not currently expose a dedicated memberships endpoint.
+    // Derive membership lists from profile endpoint to provide a consistent shape.
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_BASE_URL}/member/clubs/memberships`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return response.data;
+      const profileResult = await memberApi.getProfile();
+      const user = profileResult.data;
+
+      const joined = (user.joinedClubs || []).map(c => (typeof c === 'string' ? c : (c._id || c.id)));
+      const pending = (user.pendingClubRequests || []).map(r => (r.clubId ? (r.clubId._id || r.clubId) : r.clubId));
+      const created = (user.createdClubs || []).map(c => (typeof c === 'string' ? c : (c._id || c.id)));
+
+      return { success: true, data: { joined, pending, created } };
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to fetch club memberships' };
+      const msg = error?.message || 'Failed to fetch club memberships';
+      throw new Error(msg);
     }
   },
 
@@ -110,7 +121,8 @@ const memberApi = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to fetch events' };
+      const msg = error?.response?.data?.message || error?.message || 'Failed to fetch events';
+      throw new Error(msg);
     }
   },
 
@@ -123,7 +135,8 @@ const memberApi = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to fetch blogs' };
+      const msg = error?.response?.data?.message || error?.message || 'Failed to fetch blogs';
+      throw new Error(msg);
     }
   },
 
@@ -136,7 +149,8 @@ const memberApi = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to fetch clubs' };
+      const msg = error?.response?.data?.message || error?.message || 'Failed to fetch clubs';
+      throw new Error(msg);
     }
   }
 
@@ -150,7 +164,8 @@ const memberApi = {
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to fetch club events' };
+      const msg = error?.response?.data?.message || error?.message || 'Failed to fetch club events';
+      throw new Error(msg);
     }
   },
 
@@ -182,7 +197,8 @@ const memberApi = {
       );
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to create blog post' };
+      const msg = error?.response?.data?.message || error?.message || 'Failed to create blog post';
+      throw new Error(msg);
     }
   }
 };

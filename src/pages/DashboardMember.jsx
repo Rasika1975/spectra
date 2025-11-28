@@ -114,13 +114,22 @@ const DashboardMember = () => {
         // Fetch events
         const eventsResponse = await memberApi.getAllEvents();
         if (eventsResponse.success && eventsResponse.data) {
-          setAllEvents(eventsResponse.data);
+          // Normalize event objects to always include an `id` field
+          const normalized = eventsResponse.data.map(ev => ({ ...ev, id: ev._id || ev.id }));
+          setAllEvents(normalized);
         }
 
         // Fetch registered events
         const registeredResponse = await memberApi.getRegisteredEvents();
         if (registeredResponse.success && registeredResponse.data) {
-          setRegisteredEvents(registeredResponse.data);
+          // Convert registered event objects into arrays of ids so includes() checks work
+          const reg = registeredResponse.data;
+          const normalized = {
+            upcoming: (reg.upcoming || []).map(e => e._id || e.id),
+            past: (reg.past || []).map(e => e._id || e.id),
+            pending: (reg.pending || []).map(e => e._id || e.id),
+          };
+          setRegisteredEvents(normalized);
         }
 
         // Fetch public blogs to show in posts/feed
@@ -142,6 +151,7 @@ const DashboardMember = () => {
         // Fetch club memberships
         const membershipsResponse = await memberApi.getClubMemberships();
         if (membershipsResponse.success && membershipsResponse.data) {
+          // membershipsResponse.data is expected to be { joined: [], pending: [], created: [] }
           setClubMemberships(membershipsResponse.data);
         }
       } catch (error) {
@@ -167,7 +177,9 @@ const DashboardMember = () => {
       try {
         const response = await memberApi.getAllClubs();
         if (response.success && response.data) {
-          setAllClubs(response.data);
+          // Normalize clubs to include `id` for consistent client usage
+          const normalized = response.data.map(c => ({ ...c, id: c._id || c.id }));
+          setAllClubs(normalized);
         }
       } catch (error) {
         toast.error(error.message || "Failed to fetch clubs");
@@ -208,9 +220,16 @@ const DashboardMember = () => {
       }));
       toast.success(response.message || "Registration successful!");
       
-      // Refresh events list
+      // Refresh events list (normalize to id arrays)
       const updatedEvents = await memberApi.getRegisteredEvents();
-      setRegisteredEvents(updatedEvents);
+      if (updatedEvents && updatedEvents.data) {
+        const reg = updatedEvents.data;
+        setRegisteredEvents({
+          upcoming: (reg.upcoming || []).map(e => e._id || e.id),
+          past: (reg.past || []).map(e => e._id || e.id),
+          pending: (reg.pending || []).map(e => e._id || e.id)
+        });
+      }
     } catch (error) {
       toast.error(error.message || "Failed to register for event");
     }
@@ -234,7 +253,8 @@ const DashboardMember = () => {
       
       // Refresh club memberships
       const updatedMemberships = await memberApi.getClubMemberships();
-      setClubMemberships(updatedMemberships);
+      // memberApi.getClubMemberships returns: { success: true, data: { joined, pending, created }}
+      if (updatedMemberships && updatedMemberships.data) setClubMemberships(updatedMemberships.data);
     } catch (error) {
       toast.error(error.message || "Failed to send join request");
     }
