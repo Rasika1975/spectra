@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from 'react-hot-toast';
 import createApiClient from '../utils/api';
 import { useNavigate } from "react-router-dom";
 import Spline from '@splinetool/react-spline';
@@ -14,12 +15,14 @@ import {
   Filter,
   Download,
   Plus,
+  Image,
   Edit2,
   Trash2,
   Eye,
   ChevronDown,
   X, // Already imported
   Check, // Already imported
+  XCircle,
   UserCheck,
   UserX,
   LogOut,
@@ -201,6 +204,7 @@ const DashboardAdmin = () => {
     {
       id: 1,
       title: "Future of AI in Education",
+      image: "https://images.unsplash.com/photo-1581092580498-80b5ab1d6d3b?w=800&auto=format&fit=crop&q=80",
       author: "Admin",
       club: "Tech Innovators",
       date: "2025-10-20",
@@ -213,6 +217,7 @@ const DashboardAdmin = () => {
     {
       id: 2,
       title: "How Clubs Empower Students",
+      image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop&q=80",
       author: "Rohan Kumar",
       club: "Tech Innovators",
       date: "2025-10-25",
@@ -225,6 +230,7 @@ const DashboardAdmin = () => {
     {
       id: 3,
       title: "Art Therapy Benefits",
+      image: "https://images.unsplash.com/photo-1496317899792-9d7dbcd928a1?w=800&auto=format&fit=crop&q=80",
       author: "Sneha Patil",
       club: "Art Fusion",
       date: "2025-10-28",
@@ -335,7 +341,29 @@ const DashboardAdmin = () => {
       img: "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=400",
     };
     
-    setClubs([...clubs, club]);
+    // try to persist via API (fallback to local state if not available)
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const api = createApiClient(token);
+        if (api.admin && typeof api.admin.createClub === 'function') {
+          const resp = await api.admin.createClub({ name: club.name, email: club.email, head: club.head, headPhone: club.headPhone });
+          if (resp && resp.success && resp.data) {
+            setClubs(prev => [resp.data, ...prev]);
+            toast.success('Club created');
+            setShowModal(false);
+            setNewClub({ name: '', email: '', head: '', headPhone: '' });
+            return;
+          }
+        }
+      } catch (e) {
+        // ignore and fallback to local
+      }
+
+      setClubs([...clubs, club]);
+      setShowModal(false);
+      setNewClub({ name: "", email: "", head: "", headPhone: "" });
+    })();
     setShowModal(false);
     setNewClub({ name: "", email: "", head: "", headPhone: "" });
   };
@@ -368,6 +396,7 @@ const DashboardAdmin = () => {
             author: newBlog.author,
             content: newBlog.content,
             club: newBlog.club,
+            image: newBlog.imagePreview || null,
             date: new Date().toISOString().split("T")[0],
             views: 0,
             likes: 0,
@@ -412,17 +441,18 @@ const DashboardAdmin = () => {
         const api = createApiClient(token);
         // Try to toggle status via API
         const blogToToggle = blogs.find(b => b.id === id || b._id === id);
-        const newStatus = blogToToggle?.status === 'Published' ? 'draft' : 'published';
+        // Toggle between clearly capitalized statuses used by the UI and backend: 'Published' <-> 'Draft'
+        const newStatus = (blogToToggle?.status || '').toLowerCase() === 'published' ? 'Draft' : 'Published';
         const payload = { status: newStatus };
         const resp = await api.admin.updateBlog(blogToToggle?._id || blogToToggle?.id, payload);
-        if (resp && resp.success) {
+          if (resp && resp.success) {
           setBlogs(prev => prev.map(blog => (blog.id === id || blog._id === id ? resp.data : blog)));
         } else {
           // fallback local toggle
-          setBlogs(prev => prev.map(blog => (blog.id === id ? { ...blog, status: blog.status === "Published" ? "Draft" : "Published" } : blog)));
+          setBlogs(prev => prev.map(blog => (blog.id === id ? { ...blog, status: (blog.status === "Published" ? "Draft" : "Published") } : blog)));
         }
       } catch (e) {
-        setBlogs(prev => prev.map(blog => (blog.id === id ? { ...blog, status: blog.status === "Published" ? "Draft" : "Published" } : blog)));
+        setBlogs(prev => prev.map(blog => (blog.id === id ? { ...blog, status: (blog.status === "Published" ? "Draft" : "Published") } : blog)));
       }
     })();
   };
@@ -449,12 +479,39 @@ const DashboardAdmin = () => {
     }
   };
 
-  const handleMemberStatusChange = (memberId, newStatus) => {
-    setMembers(members.map(m => (m.id === memberId ? { ...m, status: newStatus } : m)));
+  const handleMemberStatusChange = async (memberId, newStatus) => {
+    // update locally first for snappy UI, then try to persist
+    setMembers(prev => prev.map(m => (m.id === memberId ? { ...m, status: newStatus } : m)));
+    try {
+      const token = localStorage.getItem('token');
+      const api = createApiClient(token);
+      if (api.admin && typeof api.admin.updateMemberStatus === 'function') {
+        const resp = await api.admin.updateMemberStatus(memberId, newStatus);
+        if (resp && resp.success) {
+          toast.success('Member status updated');
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to persist member status', e?.message || e);
+      toast.error('Failed to persist member status to server');
+    }
   };
 
-  const handleClubStatusChange = (clubId, newStatus) => {
-    setClubs(clubs.map(c => (c.id === clubId ? { ...c, status: newStatus } : c)));
+  const handleClubStatusChange = async (clubId, newStatus) => {
+    setClubs(prev => prev.map(c => (c.id === clubId ? { ...c, status: newStatus } : c)));
+    try {
+      const token = localStorage.getItem('token');
+      const api = createApiClient(token);
+      if (api.admin && typeof api.admin.updateClubStatus === 'function') {
+        const resp = await api.admin.updateClubStatus(clubId, newStatus);
+        if (resp && resp.success) {
+          toast.success('Club status updated');
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to persist club status', e?.message || e);
+      toast.error('Failed to persist club status to server');
+    }
   };
 
   const handleContactStatusChange = (contactId, newStatus) => {
@@ -841,8 +898,16 @@ const renderBlogs = () => (
           {blogs.map((blog) => (
             <tr key={blog.id} className="hover:bg-white/5">
               <td className="px-6 py-4">
-                <p className="font-semibold text-white">{blog.title}</p>
-                <p className="text-sm text-gray-400">{blog.category}</p>
+                            <div className="flex items-center gap-3">
+                              {(() => {
+                                const src = typeof blog.image === 'string' ? blog.image : (blog.image?.url || blog.imagePreview);
+                                return src ? (<img src={src} alt={blog.title} className="w-12 h-8 object-cover rounded" />) : null;
+                              })()}
+                              <div>
+                                <p className="font-semibold text-white">{blog.title}</p>
+                                <p className="text-sm text-gray-400">{blog.category}</p>
+                              </div>
+                            </div>
               </td>
               <td className="px-6 py-4 text-sm text-gray-300">{blog.author}</td>
               <td className="px-6 py-4 text-sm text-gray-300">{blog.club}</td>
@@ -1095,7 +1160,15 @@ const renderBlogs = () => (
                 };
               }
               const resp = await api.admin.updateProfile(payload);
-              if (resp && resp.success) {
+              if (resp && resp.success && resp.data) {
+                const data = resp.data;
+                // normalize response into adminProfile state
+                setAdminProfile(prev => ({
+                  ...prev,
+                  name: data.fullName || data.name || prev.name,
+                  contactNumber: data.phone || prev.contactNumber,
+                  avatar: data.avatar || prev.avatar,
+                }));
                 toast.success('Profile updated');
               }
             } catch (err) {
@@ -1276,9 +1349,35 @@ const renderBlogs = () => (
                 <input type="text" value={newBlog.club} onChange={(e) => setNewBlog({...newBlog, club: e.target.value})} placeholder="Enter associated club" className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Content</label>
-                <textarea value={newBlog.content} onChange={(e) => setNewBlog({...newBlog, content: e.target.value})} placeholder="Write your blog..." rows="5" className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white" />
-              </div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Content</label>
+                    <textarea value={newBlog.content} onChange={(e) => setNewBlog({...newBlog, content: e.target.value})} placeholder="Write your blog..." rows="5" className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Feature Image (optional)</label>
+                    <div className="flex items-center gap-4">
+                      {newBlog.imagePreview && (
+                        <div className="relative">
+                          <img src={newBlog.imagePreview} alt="Preview" className="w-40 h-24 object-cover rounded-lg" />
+                          <button type="button" onClick={() => setNewBlog(prev => ({ ...prev, image: null, imagePreview: null }))} className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 text-white hover:bg-red-600">
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                      {!newBlog.imagePreview && (
+                        <label className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg cursor-pointer hover:bg-white/20 transition-colors">
+                          <Image className="w-5 h-5" />
+                          <span>Upload Feature Image</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                            const file = e.target.files && e.target.files[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onloadend = () => setNewBlog(prev => ({ ...prev, image: file, imagePreview: reader.result }));
+                            reader.readAsDataURL(file);
+                          }} />
+                        </label>
+                      )}
+                    </div>
+                  </div>
               <div className="flex justify-end gap-3 pt-4">
                 <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 bg-white/10 text-gray-300 rounded-lg font-semibold">Cancel</button>
                 <button type="submit" className="px-4 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-lg font-semibold">Create Blog</button>
