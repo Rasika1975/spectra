@@ -331,7 +331,15 @@ const DashboardMember = () => {
   const renderSection = () => {
       switch (activeSection) {
          case "Dashboard":
-        return <DashboardOverview profileData={profileData} posts={posts} allEvents={allEvents} allClubs={allClubs} />;
+        return (
+          <DashboardOverview
+            profileData={profileData}
+            posts={posts}
+            allEvents={allEvents}
+            allClubs={allClubs}
+            onEditProfile={() => { setActiveSection('Profile'); setProfileEditMode(true); }}
+          />
+        );
          case "Profile":
         return <ProfileSection profileData={profileData} setProfileData={setProfileData} startEditing={profileEditMode} onEditingDone={() => setProfileEditMode(false)} />;
       case "My Posts":
@@ -374,7 +382,15 @@ const DashboardMember = () => {
          case "Contact":
         return <ContactSection />;
          default:
-        return <DashboardOverview profileData={profileData} posts={posts} allEvents={allEvents} allClubs={allClubs} />;
+        return (
+          <DashboardOverview
+            profileData={profileData}
+            posts={posts}
+            allEvents={allEvents}
+            allClubs={allClubs}
+            onEditProfile={() => { setActiveSection('Profile'); setProfileEditMode(true); }}
+          />
+        );
       }
    };
 
@@ -588,7 +604,7 @@ const DashboardMember = () => {
    );
 };
 
-const DashboardOverview = ({ profileData, posts, allEvents, allClubs }) => (
+const DashboardOverview = ({ profileData, posts, allEvents, allClubs, onEditProfile }) => (
   <div className="space-y-8">
     <h2 className="text-3xl font-bold text-white">Welcome back, {profileData.name.split(' ')[0]}!</h2>
     
@@ -616,10 +632,7 @@ const DashboardOverview = ({ profileData, posts, allEvents, allClubs }) => (
       <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl">
         <h3 className="text-lg font-bold text-white mb-4">Quick Actions</h3>
         <div className="flex gap-4">
-          <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-lg">
-            <Plus className="w-4 h-4" /> Create Post
-          </button>
-          <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white/10 text-gray-300 rounded-lg">
+          <button onClick={onEditProfile} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white/10 text-gray-300 rounded-lg hover:bg-white/20 transition-colors">
             <Settings className="w-4 h-4" /> Edit Profile
           </button>
         </div>
