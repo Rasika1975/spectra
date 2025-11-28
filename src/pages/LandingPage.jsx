@@ -152,7 +152,7 @@ export default function LandingPage() {
       events: 12,
       blogs: 34,
       verified: true,
-      image: 'https://via.placeholder.com/400x250',
+      image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&auto=format&fit=crop&q=80',
     },
     {
       id: 2,
@@ -163,7 +163,7 @@ export default function LandingPage() {
       events: 8,
       blogs: 21,
       verified: true,
-      image: 'https://via.placeholder.com/400x250',
+      image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&auto=format&fit=crop&q=80',
     },
     {
       id: 3,
@@ -174,7 +174,7 @@ export default function LandingPage() {
       events: 15,
       blogs: 12,
       verified: false,
-      image: 'https://via.placeholder.com/400x250',
+      image: 'https://images.unsplash.com/photo-1519046904884-53103f008bca?w=1200&auto=format&fit=crop&q=80',
     }
   ];
 
