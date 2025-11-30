@@ -41,7 +41,11 @@ const API = {
             updateStatus: `${BASE_URL}/api/admin/clubs/status`
         },
         blogs: {
-            create: `${BASE_URL}/api/admin/blogs`
+            create: `${BASE_URL}/api/admin/blogs`,
+            list: `${BASE_URL}/api/admin/blogs`
+        },
+        events: {
+            list: `${BASE_URL}/api/admin/events`
         },
         contacts: {
             list: `${BASE_URL}/api/admin/contacts`,
@@ -159,6 +163,8 @@ export const createApiClient = (token = null) => {
                 method: 'PUT',
                 body: JSON.stringify({ clubId, action })
             }),
+            getAllEvents: () => fetchWithAuth(API.admin.events.list),
+            getAllBlogs: () => fetchWithAuth(API.admin.blogs.list),
             createBlog: (blogData) => {
                 // if FormData (multipart) was passed, send as-is
                 const options = { method: 'POST' };

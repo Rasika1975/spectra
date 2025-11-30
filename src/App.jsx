@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 
 // Public Pages
 import LandingPage from "./pages/LandingPage";
+import BlogDetail from './pages/BlogDetail';
 import Clubs from "./pages/Clubs";
 
 // Auth
@@ -37,6 +38,7 @@ const AppLayout = () => {
 
           {/* ✅ Public Routes */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/blogs/:id" element={<BlogDetail />} />
           <Route path="/clubs" element={<Clubs />} />
 
           {/* ✅ Deleted → <Route path="/clubs/:id" element={<ClubDetail />} /> */}

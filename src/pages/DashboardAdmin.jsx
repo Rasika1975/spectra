@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from 'react-hot-toast';
-import createApiClient from '../utils/api';
+import { createApiClient } from '../utils/api';
+import { API_BASE_URL } from '../config/api';
+import memberApi from '../services/memberApi';
 import { useNavigate } from "react-router-dom";
 import Spline from '@splinetool/react-spline';
 import {
@@ -85,225 +87,443 @@ const DashboardAdmin = () => {
   const [newEvent, setNewEvent] = useState({ name: "", club: "", date: "" });
 
   // Mock data - replace with API calls
- const [members, setMembers] = useState([
-  {
-    id: 1,
-    name: "Riya Sharma",
-    email: "riya@gmail.com",
-    college: "MIT",
-    city: "Pune",
-    phone: "+91 9876543210",
-    status: "Active",
-    subscription: "Yearly",
-    joinDate: "2025-01-15",
-    avatar: "https://i.pravatar.cc/150?img=1",
-    joinedClubs: ["Tech Innovators", "Art Fusion"],
-    joinedEvents: ["Tech Expo 2025"],
-  },
-  {
-    id: 2,
-    name: "Arjun Mehta",
-    email: "arjun@gmail.com",
-    college: "PCCOE",
-    city: "Pune",
-    phone: "+91 9876543211",
-    status: "Pending",
-    subscription: "Monthly",
-    joinDate: "2025-10-20",
-    avatar: "https://i.pravatar.cc/150?img=2",
-    joinedClubs: ["Art Fusion"],
-    joinedEvents: [],
-  },
-  {
-    id: 3,
-    name: "Priya Desai",
-    email: "priya@gmail.com",
-    college: "VIT",
-    city: "Mumbai",
-    phone: "+91 9876543212",
-    status: "Active",
-    subscription: "6-Monthly",
-    joinDate: "2025-03-10",
-    avatar: "https://i.pravatar.cc/150?img=3",
-    joinedClubs: ["Tech Innovators", "Sports Arena"],
-    joinedEvents: ["Tech Expo 2025", "Cultural Fest"],
-  },
-  {
-    id: 4,
-    name: "Suresh Kumar",
-    email: "suresh@gmail.com",
-    college: "COEP",
-    city: "Pune",
-    phone: "+91 9876543213",
-    status: "Suspended",
-    subscription: "Yearly",
-    joinDate: "2024-02-20",
-    avatar: "https://i.pravatar.cc/150?img=4",
-    joinedClubs: ["Sports Arena"],
-    joinedEvents: ["Sports Championship"],
-  },
-]);
+ const [members, setMembers] = useState([]);
 
 
-  const [clubs, setClubs] = useState([
-    { 
-      id: 1,
-      name: "Tech Innovators",
-      email: "tech@spectra.com",
-      members: 120,
-      events: 15,
-      status: "Active",
-      subscription: "Yearly",
-      head: "Rohan Kumar",
-      headPhone: "+91 9876511111",
-      createdDate: "2024-06-10",
-      img: "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=400",
-    },
-    {
-      id: 2,
-      name: "Art Fusion",
-      email: "art@spectra.com",
-      members: 80,
-      events: 8,
-      status: "Active",
-      subscription: "Monthly",
-      head: "Sneha Patil",
-      headPhone: "+91 9876522222",
-      createdDate: "2024-08-15",
-      img: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=400",
-    },
-    {
-      id: 3,
-      name: "Sports Arena",
-      email: "sports@spectra.com",
-      members: 200,
-      events: 30,
-      status: "Suspended",
-      subscription: "Yearly",
-      head: "Vikram Singh",
-      headPhone: "+91 9876533333",
-      createdDate: "2024-05-20",
-      img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400",
-    },
-    {
-      id: 4,
-      name: "Literary Circle",
-      email: "lit@spectra.com",
-      members: 45,
-      events: 5,
-      status: "Pending",
-      subscription: "Monthly",
-      head: "Anjali Rao",
-      headPhone: "+91 9876544444",
-      createdDate: "2025-10-25",
-      img: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=400",
-    },
-  ]);
+  const [clubs, setClubs] = useState([]);
 
-  const [blogs, setBlogs] = useState([
-    {
-      id: 1,
-      title: "Future of AI in Education",
-      image: "https://images.unsplash.com/photo-1581092580498-80b5ab1d6d3b?w=800&auto=format&fit=crop&q=80",
-      author: "Admin",
-      club: "Tech Innovators",
-      date: "2025-10-20",
-      views: 1250,
-      likes: 89,
-      status: "Published",
-      category: "Technology",
-      content: "This is a full blog content for Future of AI...",
-    },
-    {
-      id: 2,
-      title: "How Clubs Empower Students",
-      image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop&q=80",
-      author: "Rohan Kumar",
-      club: "Tech Innovators",
-      date: "2025-10-25",
-      views: 890,
-      likes: 67,
-      status: "Published",
-      category: "Community",
-      content: "This is the full blog writing...",
-    },
-    {
-      id: 3,
-      title: "Art Therapy Benefits",
-      image: "https://images.unsplash.com/photo-1496317899792-9d7dbcd928a1?w=800&auto=format&fit=crop&q=80",
-      author: "Sneha Patil",
-      club: "Art Fusion",
-      date: "2025-10-28",
-      views: 450,
-      likes: 34,
-      status: "Draft",
-      category: "Art",
-      content: "Art therapy has various benefits...",
-    },
-  ]);
+  const [blogs, setBlogs] = useState([]);
 
-  const [events, setEvents] = useState([
-    {
-      id: 1,
-      name: "Tech Expo 2025",
-      club: "Tech Innovators",
-      date: "2025-11-15",
-      registrations: 450,
-      maxCapacity: 500,
-      status: "Upcoming",
-      type: "Free",
-      img: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400",
-    },
-    // Add mock registrations to an event
-    // events[0].registeredMembers = [members[0], members[2]];
-    {
-      id: 2,
-      name: "Cultural Fest",
-      club: "Art Fusion",
-      date: "2025-12-03",
-      registrations: 320,
-      maxCapacity: 400,
-      status: "Upcoming",
-      type: "Free",
-      img: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400",
-    },
-    {
-      id: 3,
-      name: "Sports Championship",
-      club: "Sports Arena",
-      date: "2025-10-28",
-      registrations: 180,
-      maxCapacity: 200,
-      status: "Completed",
-      type: "Free",
-      img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400",
-    },
-  ]);
+  const [events, setEvents] = useState([]);
 
-  const [contacts, setContacts] = useState([
-    {
-      id: 1,
-      name: "Neha Patil",
-      email: "neha@gmail.com",
-      phone: "+91 98765 55555",
-      subject: "Event Inquiry",
-      message: "I want to know more details about the upcoming tech events. Are there any prerequisites for the workshops?",
-      date: "2025-10-28",
-      status: "Pending",
-      senderType: "Member",
-    },
-    {
-      id: 2,
-      name: "Rohit Jain",
-      email: "rohit@gmail.com",
-      phone: "+91 98765 66666",
-      subject: "Club Registration Issue",
-      message: "How can I register my new club?",
-      date: "2025-10-27",
-      status: "Resolved",
-      senderType: "Club",
-    },
-  ]);
+  const [contacts, setContacts] = useState([]);
+  const [loadingData, setLoadingData] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
+  const [fetchDebug, setFetchDebug] = useState({ lastPath: null, lastStatus: null, details: null });
+
+  const fetchAllData = async () => {
+    setLoadingData(true);
+    setFetchError(null);
+
+    const token = localStorage.getItem('token');
+
+    // If no admin token, try development-only unauthenticated endpoints
+    async function tryDevFallback() {
+      console.debug('[AdminDebug] tryDevFallback: attempting unauthenticated dev endpoints');
+      try {
+        // members
+        const mRespRaw = await fetch(`${API_BASE_URL}/admin/dev/members`);
+        if (mRespRaw.ok) {
+          const mResp = await mRespRaw.json();
+          if (mResp && mResp.success && Array.isArray(mResp.data)) {
+            setMembers(mResp.data.map(m => ({
+              ...m,
+              id: m._id || m.id,
+              name: m.fullName || m.name || m.email,
+              college: m.college || m.collegeName || '',
+              avatar: m.avatar || m.profileImg || m.photo || '',
+              status: m.status ? String(m.status).charAt(0).toUpperCase() + String(m.status).slice(1) : (m.emailVerified ? 'Active' : 'Pending')
+            })));
+          }
+        }
+
+        // clubs
+        const cRespRaw = await fetch(`${API_BASE_URL}/admin/dev/clubs`);
+        if (cRespRaw.ok) {
+          const cResp = await cRespRaw.json();
+          if (cResp && cResp.success && Array.isArray(cResp.data)) {
+            setClubs(cResp.data.map(c => ({
+              ...c,
+              id: c._id || c.id,
+              name: c.name || c.fullName || c.clubName || '',
+              img: c.img || c.image || c.banner || '',
+              head: (c.clubHead && (c.clubHead.name || c.clubHead.fullName)) || c.head || '',
+              headPhone: (c.clubHead && (c.clubHead.phone || c.clubHead.headPhone)) || c.headPhone || '',
+              members: c.memberCount ?? (Array.isArray(c.members) ? c.members.length : c.members),
+              events: c.eventCount ?? (Array.isArray(c.events) ? c.events.length : c.events),
+              status: c.status ? String(c.status).charAt(0).toUpperCase() + String(c.status).slice(1) : ''
+            })));
+          }
+        }
+
+        // events
+        const eRespRaw = await fetch(`${API_BASE_URL}/admin/dev/events`);
+        if (eRespRaw.ok) {
+          const eResp = await eRespRaw.json();
+          if (eResp && eResp.success && Array.isArray(eResp.data)) {
+            setEvents(eResp.data.map(ev => ({
+              ...ev,
+              id: ev._id || ev.id,
+              name: ev.title || ev.name || '',
+              status: ev.status || '',
+              registrations: ev.registrationsCount ?? (Array.isArray(ev.registrations) ? ev.registrations.length : 0)
+            })));
+          }
+        }
+
+        // blogs
+        const bRespRaw = await fetch(`${API_BASE_URL}/admin/dev/blogs`);
+        if (bRespRaw.ok) {
+          const bResp = await bRespRaw.json();
+          if (bResp && bResp.success && Array.isArray(bResp.data)) {
+            setBlogs(bResp.data.map(b => ({
+              ...b,
+              id: b._id || b.id,
+              title: b.title,
+              status: b.status || '',
+              image: (b.image && (b.image.url || b.image)) || b.imagePreview || null,
+            })));
+            setFetchDebug({ lastPath: '/api/admin/blogs', lastStatus: 'ok', details: `blogs:${bResp.data.length}` });
+          }
+        }
+
+        // contacts
+        const conRespRaw = await fetch(`${API_BASE_URL}/admin/dev/contacts`);
+        if (conRespRaw.ok) {
+          const conResp = await conRespRaw.json();
+          if (conResp && conResp.success && Array.isArray(conResp.data)) {
+            setContacts(conResp.data.map(c => ({
+              ...c,
+              id: c._id || c.id,
+              sender: c.senderId?.fullName || c.senderName || c.name || '',
+              email: c.senderId?.email || c.email || '',
+            })));
+          }
+        }
+
+        setFetchError(null);
+        return true;
+      } catch (e) {
+        // ignore dev fallback errors
+        return false;
+      }
+    }
+
+    // When developing locally, prefer the unauthenticated dev endpoints first so UI shows DB content immediately
+    const isDevClient = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV;
+    if (isDevClient) {
+      try {
+        const ok = await tryDevFallback();
+        setFetchDebug(prev => ({ ...prev, lastPath: 'dev-init', lastStatus: ok ? 'ok' : 'no-data' }));
+      } catch (e) {
+        console.warn('[AdminDebug] dev-init fetch failed', e?.message || e);
+      }
+    }
+
+    if (!token) {
+      const ok = await tryDevFallback();
+      if (!ok) {
+        setFetchError('auth');
+        toast.error('Admin not authenticated — please sign in as admin to view real data');
+      }
+      setLoadingData(false);
+      return;
+    }
+
+    // No early dev-init here; we'll fall back per-collection below if authenticated fetch returns nothing.
+
+    const api = createApiClient(token);
+    let foundAny = false;
+    try {
+      let membersRespSuccess = false;
+      let clubsRespSuccess = false;
+      let eventsRespSuccess = false;
+      let blogsRespSuccess = false;
+      let contactsRespSuccess = false;
+      // Members
+      if (api.admin && typeof api.admin.getAllMembers === 'function') {
+        const resp = await api.admin.getAllMembers();
+        if (resp && resp.success && Array.isArray(resp.data)) {
+          // Keep the full member object and normalize a couple of fields the UI expects
+          setMembers(resp.data.map(m => ({
+            ...m,
+            id: m._id || m.id,
+            name: m.fullName || m.name || m.email,
+            college: m.college || m.collegeName || m.collegeName || '',
+            avatar: m.avatar || m.profileImg || m.photo || '',
+            status: m.status ? String(m.status).charAt(0).toUpperCase() + String(m.status).slice(1) : (m.emailVerified ? 'Active' : 'Pending')
+          }))); 
+          setFetchDebug({ lastPath: '/api/admin/members', lastStatus: 'ok', details: `members:${resp.data.length}` });
+          foundAny = true;
+          membersRespSuccess = true;
+        } else if (resp) {
+          setFetchDebug({ lastPath: '/api/admin/members', lastStatus: 'error', details: JSON.stringify(resp).slice(0,200) });
+        }
+      }
+
+      // Clubs
+      if (api.admin && typeof api.admin.getAllClubs === 'function') {
+        const resp = await api.admin.getAllClubs();
+        if (resp && resp.success && Array.isArray(resp.data)) {
+          // Preserve club properties and normalize names used by the UI
+          setClubs(resp.data.map(c => ({
+            ...c,
+            id: c._id || c.id,
+            name: c.name || c.fullName || c.clubName || '',
+            img: c.img || c.image || c.banner || '',
+            head: (c.clubHead && (c.clubHead.name || c.clubHead.fullName)) || c.head || '',
+            headPhone: (c.clubHead && (c.clubHead.phone || c.clubHead.headPhone)) || c.headPhone || '',
+            members: c.memberCount ?? (Array.isArray(c.members) ? c.members.length : c.members),
+            events: c.eventCount ?? (Array.isArray(c.events) ? c.events.length : c.events),
+            status: c.status ? String(c.status).charAt(0).toUpperCase() + String(c.status).slice(1) : ''
+          })));
+          setFetchDebug({ lastPath: '/api/admin/clubs', lastStatus: 'ok', details: `clubs:${resp.data.length}` });
+          foundAny = true;
+          clubsRespSuccess = true;
+        } else if (resp) {
+          setFetchDebug({ lastPath: '/api/admin/clubs', lastStatus: 'error', details: JSON.stringify(resp).slice(0,200) });
+        }
+      }
+
+      // Events (admin)
+      try {
+        if (api.admin && typeof api.admin.getAllEvents === 'function') {
+          const evResp = await api.admin.getAllEvents();
+            if (evResp && evResp.success && Array.isArray(evResp.data)) {
+            setEvents(evResp.data.map(ev => ({
+              ...ev,
+              id: ev._id || ev.id,
+              name: ev.title || ev.name || '',
+              status: ev.status || '',
+              registrations: ev.registrationsCount ?? (Array.isArray(ev.registrations) ? ev.registrations.length : 0)
+            })));
+            setFetchDebug({ lastPath: '/api/admin/events', lastStatus: 'ok', details: `events:${evResp.data.length}` });
+            foundAny = true;
+            eventsRespSuccess = true;
+            } else if (evResp) {
+              setFetchDebug({ lastPath: '/api/admin/events', lastStatus: 'error', details: JSON.stringify(evResp).slice(0,200) });
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch admin events for dashboard', e.message || e);
+      }
+
+      // Blogs (admin) - list all blogs
+      try {
+        if (api.admin && typeof api.admin.getAllBlogs === 'function') {
+          const bResp = await api.admin.getAllBlogs();
+            if (bResp && bResp.success && Array.isArray(bResp.data)) {
+            setBlogs(bResp.data.map(b => ({
+              ...b,
+              id: b._id || b.id,
+              title: b.title,
+              status: b.status || '',
+              image: (b.image && (b.image.url || b.image)) || b.imagePreview || null,
+            })));
+            foundAny = true;
+            blogsRespSuccess = true;
+            } else if (bResp) {
+              setFetchDebug({ lastPath: '/api/admin/blogs', lastStatus: 'error', details: JSON.stringify(bResp).slice(0,200) });
+          }
+        }
+
+      // Contacts (admin)
+      try {
+        if (api.admin && typeof api.admin.getContactSubmissions === 'function') {
+          const contactResp = await api.admin.getContactSubmissions({});
+          if (contactResp && contactResp.success && Array.isArray(contactResp.data)) {
+            setContacts(contactResp.data.map(c => ({
+              ...c,
+              id: c._id || c.id,
+              sender: c.senderId?.fullName || c.senderName || c.name || '',
+              email: c.senderId?.email || c.email || '',
+            })));
+            setFetchDebug({ lastPath: '/api/admin/contacts', lastStatus: 'ok', details: `contacts:${contactResp.data.length}` });
+            contactsRespSuccess = true;
+            foundAny = true;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch admin contacts', e?.message || e);
+      }
+      } catch (e) {
+        console.warn('Failed to fetch admin blogs for dashboard', e.message || e);
+      }
+
+      // If any individual collection is empty after authenticated fetch, try the dev endpoints for that collection
+      if (!membersRespSuccess) {
+        try {
+          const raw = await fetch(`${API_BASE_URL}/admin/dev/members`);
+          if (raw.ok) {
+            const json = await raw.json();
+            if (json && json.success && Array.isArray(json.data)) {
+              setMembers(json.data.map(m => ({
+                ...m,
+                id: m._id || m.id,
+                name: m.fullName || m.name || m.email,
+                college: m.college || m.collegeName || '',
+                avatar: m.avatar || m.profileImg || m.photo || '',
+                status: m.status ? String(m.status).charAt(0).toUpperCase() + String(m.status).slice(1) : (m.emailVerified ? 'Active' : 'Pending')
+              })));
+              membersRespSuccess = true;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!clubsRespSuccess) {
+        try {
+          const raw = await fetch(`${API_BASE_URL}/admin/dev/clubs`);
+          if (raw.ok) {
+            const json = await raw.json();
+            if (json && json.success && Array.isArray(json.data)) {
+              setClubs(json.data.map(c => ({
+                ...c,
+                id: c._id || c.id,
+                name: c.name || c.fullName || c.clubName || '',
+                img: c.img || c.image || c.banner || '',
+                head: (c.clubHead && (c.clubHead.name || c.clubHead.fullName)) || c.head || '',
+                headPhone: (c.clubHead && (c.clubHead.phone || c.clubHead.headPhone)) || c.headPhone || '',
+                members: c.memberCount ?? (Array.isArray(c.members) ? c.members.length : c.members),
+                events: c.eventCount ?? (Array.isArray(c.events) ? c.events.length : c.events),
+                status: c.status ? String(c.status).charAt(0).toUpperCase() + String(c.status).slice(1) : ''
+              })));
+              clubsRespSuccess = true;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!eventsRespSuccess) {
+        try {
+          const raw = await fetch(`${API_BASE_URL}/admin/dev/events`);
+          if (raw.ok) {
+            const json = await raw.json();
+            if (json && json.success && Array.isArray(json.data)) {
+              setEvents(json.data.map(ev => ({
+                ...ev,
+                id: ev._id || ev.id,
+                name: ev.title || ev.name || '',
+                status: ev.status || '',
+                registrations: ev.registrationsCount ?? (Array.isArray(ev.registrations) ? ev.registrations.length : 0)
+              })));
+              eventsRespSuccess = true;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!blogsRespSuccess) {
+        try {
+          const raw = await fetch(`${API_BASE_URL}/admin/dev/blogs`);
+          if (raw.ok) {
+            const json = await raw.json();
+            if (json && json.success && Array.isArray(json.data)) {
+              setBlogs(json.data.map(b => ({
+                ...b,
+                id: b._id || b.id,
+                title: b.title,
+                status: b.status || '',
+                image: (b.image && (b.image.url || b.image)) || b.imagePreview || null,
+              })));
+              blogsRespSuccess = true;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!contactsRespSuccess) {
+        try {
+          const raw = await fetch(`${API_BASE_URL}/admin/dev/contacts`);
+          if (raw.ok) {
+            const json = await raw.json();
+            if (json && json.success && Array.isArray(json.data)) {
+              setContacts(json.data.map(c => ({
+                ...c,
+                id: c._id || c.id,
+                sender: c.senderId?.fullName || c.senderName || c.name || '',
+                email: c.senderId?.email || c.email || '',
+              })));
+              contactsRespSuccess = true;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!foundAny) {
+        console.warn('Authenticated admin endpoints returned no data — attempting dev fallback');
+        const devOk = await tryDevFallback();
+        if (!devOk) {
+          // nothing found via auth or dev fallback
+          setFetchError('failed');
+        } else {
+          setFetchError(null);
+        }
+      } else {
+        setFetchError(null);
+      }
+    } catch (err) {
+      // If user isn't an admin or token invalid, fallback to dev endpoints so the dashboard still shows DB records while developing
+      if (err?.message && /unauthoriz|forbid|401|403/i.test(err.message)) {
+        console.warn('Authenticated admin call failed with auth error — trying dev-only fallback', err.message);
+        const ok = await tryDevFallback();
+        if (ok) {
+          setFetchError(null);
+          return;
+        }
+
+        setFetchError('auth');
+        toast.error('Admin authorization required — please sign in as admin');
+      } else {
+        setFetchError('failed');
+        toast.error('Failed to load admin data — check the backend server or network');
+      }
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  useEffect(() => { fetchAllData(); }, []);
+
+  // Subscribe to server-sent events so admin UI refreshes automatically when new records are created
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+
+    // prefer authenticated stream if we have token; otherwise fall back to a dev-only unauthenticated stream
+    const streamUrl = token
+      ? `${API_BASE_URL}/admin/stream?token=${encodeURIComponent(token)}`
+      : `${API_BASE_URL}/admin/dev/stream`;
+    let es;
+    try {
+      es = new EventSource(streamUrl);
+    } catch (e) {
+      console.warn('Failed to open EventSource', e?.message || e);
+      return;
+    }
+
+    const onAny = (e) => {
+      try {
+        // Some events send JSON payloads
+        const payload = e?.data ? JSON.parse(e.data) : null;
+        // For now, simply refetch authoritative data on any creation event
+        if (['member_created', 'club_created', 'event_created', 'blog_created'].includes(e.type) || e.type === 'message') {
+          fetchAllData();
+        }
+      } catch (err) {
+        // fallback: refetch anyway on parse failures
+        fetchAllData();
+      }
+    };
+
+    // add listeners
+    es.addEventListener('member_created', onAny);
+    es.addEventListener('club_created', onAny);
+    es.addEventListener('event_created', onAny);
+    es.addEventListener('blog_created', onAny);
+    es.addEventListener('connected', () => console.log('Admin SSE connected'));
+    es.onmessage = onAny; // fallback to default message
+
+    es.onerror = (err) => {
+      console.warn('Admin SSE error', err);
+      // attempt to reconnect logic handled by EventSource automatically; we may re-fetch occasionally
+    };
+
+    return () => {
+      try {
+        es.close();
+      } catch (e) {}
+    };
+  }, []);
 
   const [subscriptionPrices, setSubscriptionPrices] = useState({
     member: {
@@ -317,6 +537,39 @@ const DashboardAdmin = () => {
       yearly: 8999,
     },
   });
+
+  // Derive counts displayed in the Platform Overview so the values reflect live DB state
+  const totalMembers = (members && members.length) || 0;
+  const totalClubs = (clubs && clubs.length) || 0;
+
+  const isEventActive = (ev) => {
+    if (!ev) return false;
+    const status = (ev.status || '').toString().toLowerCase();
+    if (['upcoming', 'active', 'ongoing', 'running'].includes(status)) return true;
+    if (ev.date) {
+      try {
+        const d = new Date(ev.date);
+        const now = new Date();
+        // treat future or same-day events as active
+        if (!isNaN(d.getTime()) && d >= new Date(now.toDateString())) return true;
+      } catch (e) {}
+    }
+    return false;
+  };
+
+  const activeEventsCount = (events || []).filter(isEventActive).length;
+
+  const isBlogPublished = (b) => {
+    if (!b) return false;
+    const status = (b.status || '').toString().toLowerCase();
+    if (status === 'published') return true;
+    if (b.published === true || b.isPublished === true) return true;
+    return false;
+  };
+
+  const publishedBlogsCount = (blogs || []).filter(isBlogPublished).length;
+
+  const totalContacts = (contacts && contacts.length) || 0;
 
   const sidebarItems = [
     { name: "Dashboard", icon: LayoutDashboard },
@@ -479,35 +732,46 @@ const DashboardAdmin = () => {
     }
   };
 
-  const handleMemberStatusChange = async (memberId, newStatus) => {
-    // update locally first for snappy UI, then try to persist
-    setMembers(prev => prev.map(m => (m.id === memberId ? { ...m, status: newStatus } : m)));
+  const handleMemberStatusChange = async (memberId, action) => {
+    // action expected: 'activate' or 'suspend'
+    const optimistic = action === 'suspend' ? 'Suspended' : 'Active';
+    setMembers(prev => prev.map(m => (m.id === memberId || m._id === memberId ? { ...m, status: optimistic } : m)));
     try {
       const token = localStorage.getItem('token');
       const api = createApiClient(token);
       if (api.admin && typeof api.admin.updateMemberStatus === 'function') {
-        const resp = await api.admin.updateMemberStatus(memberId, newStatus);
-        if (resp && resp.success) {
+        const resp = await api.admin.updateMemberStatus(memberId, action);
+        if (resp && resp.success && resp.data) {
+          const updated = resp.data;
+          setMembers(prev => prev.map(m => (m.id === memberId || m._id === memberId ? ({ ...m, status: (updated.status || '').charAt(0).toUpperCase() + (updated.status || '').slice(1) }) : m)));
           toast.success('Member status updated');
+          return;
         }
       }
+      toast.error('Failed to persist member status to server');
     } catch (e) {
       console.warn('Failed to persist member status', e?.message || e);
       toast.error('Failed to persist member status to server');
     }
   };
 
-  const handleClubStatusChange = async (clubId, newStatus) => {
-    setClubs(prev => prev.map(c => (c.id === clubId ? { ...c, status: newStatus } : c)));
+  // expects action: 'approve'|'activate'|'suspend'
+  const handleClubStatusChange = async (clubId, action) => {
+    const optimisticStatus = action === 'suspend' ? 'Suspended' : 'Active';
+    setClubs(prev => prev.map(c => (c.id === clubId || c._id === clubId ? { ...c, status: optimisticStatus } : c)));
     try {
       const token = localStorage.getItem('token');
       const api = createApiClient(token);
       if (api.admin && typeof api.admin.updateClubStatus === 'function') {
-        const resp = await api.admin.updateClubStatus(clubId, newStatus);
-        if (resp && resp.success) {
+        const resp = await api.admin.updateClubStatus(clubId, action);
+        if (resp && resp.success && resp.data) {
+          const updated = resp.data;
+          setClubs(prev => prev.map(c => (c.id === clubId || c._id === clubId ? ({ ...c, status: (updated.status || '').charAt(0).toUpperCase() + (updated.status || '').slice(1), members: updated.memberCount ?? c.members, events: updated.eventCount ?? c.events }) : c)));
           toast.success('Club status updated');
+          return;
         }
       }
+      toast.error('Failed to persist club status to server');
     } catch (e) {
       console.warn('Failed to persist club status', e?.message || e);
       toast.error('Failed to persist club status to server');
@@ -547,10 +811,11 @@ const DashboardAdmin = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: "Total Members", value: members.length, change: "+12%", icon: Users, color: "blue" },
-          { label: "Total Clubs", value: clubs.length, change: "+5%", icon: Building2, color: "green" },
-          { label: "Active Events", value: events.filter(e => e.status === 'Upcoming').length, change: "+8%", icon: Calendar, color: "purple" },
-          { label: "Published Blogs", value: blogs.filter(b => b.status === 'Published').length, change: "+15%", icon: FileText, color: "orange" },
+          { label: "Total Members", value: totalMembers, change: "+12%", icon: Users, color: "blue" },
+          { label: "Total Clubs", value: totalClubs, change: "+5%", icon: Building2, color: "green" },
+          { label: "Active Events", value: activeEventsCount, change: "+8%", icon: Calendar, color: "purple" },
+          { label: "Published Blogs", value: publishedBlogsCount, change: "+15%", icon: FileText, color: "orange" },
+          { label: "Contacts", value: totalContacts, change: "+0%", icon: Mail, color: "teal" },
         ].map((stat, i) => (
           <div key={i} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:-translate-y-1 transition-transform">
             <div className="flex items-center justify-between mb-2">
@@ -622,17 +887,18 @@ const DashboardAdmin = () => {
   const renderMembers = () => {
     // Filter members based on search and filters
     let filteredMembers = members.filter(m => {
-      const matchesSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           m.email.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = memberFilters.status === 'all' || m.status.toLowerCase() === memberFilters.status;
-      const matchesSubscription = memberFilters.subscription === 'all' || m.subscription.toLowerCase().includes(memberFilters.subscription);
-      const matchesCity = memberFilters.city === 'all' || m.city === memberFilters.city;
+      const matchesSearch = (m.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           (m.email || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = memberFilters.status === 'all' || (m.status || '').toLowerCase() === memberFilters.status;
+      const matchesSubscription = memberFilters.subscription === 'all' || (m.subscription || '').toLowerCase().includes(memberFilters.subscription);
+      const memCity = (m.city && String(m.city).trim()) || 'Unknown';
+      const matchesCity = memberFilters.city === 'all' || memCity === memberFilters.city;
       return matchesSearch && matchesStatus && matchesSubscription && matchesCity;
     });
 
     // Group members by city
     const membersByCity = filteredMembers.reduce((acc, member) => {
-      const city = member.city;
+      const city = (member.city && String(member.city).trim()) || 'Unknown';
       if (!acc[city]) {
         acc[city] = [];
       }
@@ -691,7 +957,7 @@ const DashboardAdmin = () => {
   className="px-3 py-2 bg-black/20 border border-white/10 rounded-lg"
 >
   <option value="all">All Cities</option>
-  {[...new Set(members.map(m => m.city))].map(city => (
+  {[...new Set(members.map(m => (m.city && String(m.city).trim()) || 'Unknown'))].map(city => (
     <option key={city} value={city}>{city}</option>
   ))}
 </select>
@@ -746,6 +1012,17 @@ const DashboardAdmin = () => {
                     >
                       <Eye className="w-4 h-4" /> View
                     </button>
+                    {/* Status action buttons */}
+                    {member.status === 'Active' && (
+                      <button onClick={() => handleMemberStatusChange(member.id, 'suspend')} className="p-2 bg-yellow-600/50 text-white rounded-lg hover:bg-yellow-600" title="Suspend">
+                        <UserX className="w-4 h-4" />
+                      </button>
+                    )}
+                    {(member.status === 'Pending' || member.status === 'Suspended') && (
+                      <button onClick={() => handleMemberStatusChange(member.id, 'activate')} className="p-2 bg-green-600/50 text-white rounded-lg hover:bg-green-600" title="Activate">
+                        <UserCheck className="w-4 h-4" />
+                      </button>
+                    )}
                     <button 
                       onClick={() => { setSelectedItem(member); setModalType("confirmDelete"); setShowModal(true); }} 
                       className="p-2 bg-red-600/50 text-white rounded-lg hover:bg-red-600"
@@ -838,7 +1115,7 @@ const DashboardAdmin = () => {
                 </button>
                 {club.status === 'Pending' && (
                   <button 
-                    onClick={() => handleClubStatusChange(club.id, 'Active')}
+                    onClick={() => handleClubStatusChange(club.id, 'approve')}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-600/50 text-white rounded-lg hover:bg-green-600"
                   >
                     <Check className="w-4 h-4" />
@@ -855,6 +1132,24 @@ const DashboardAdmin = () => {
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
+                {club.status === 'Active' && (
+                  <button
+                    onClick={() => handleClubStatusChange(club.id, 'suspend')}
+                    className="p-2 bg-yellow-600/50 text-white rounded-lg hover:bg-yellow-600"
+                    title="Suspend"
+                  >
+                    <UserX className="w-4 h-4" />
+                  </button>
+                )}
+                {club.status === 'Suspended' && (
+                  <button
+                    onClick={() => handleClubStatusChange(club.id, 'activate')}
+                    className="p-2 bg-green-600/50 text-white rounded-lg hover:bg-green-600"
+                    title="Reactivate"
+                  >
+                    <UserCheck className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -909,8 +1204,8 @@ const renderBlogs = () => (
                               </div>
                             </div>
               </td>
-              <td className="px-6 py-4 text-sm text-gray-300">{blog.author}</td>
-              <td className="px-6 py-4 text-sm text-gray-300">{blog.club}</td>
+              <td className="px-6 py-4 text-sm text-gray-300">{(typeof blog.author === 'object' ? (blog.author.fullName || blog.author.name || blog.author.email) : blog.author) || '—'}</td>
+              <td className="px-6 py-4 text-sm text-gray-300">{(typeof blog.club === 'object' ? (blog.club.name || blog.club.fullName || blog.club._id) : blog.club) || '—'}</td>
               <td className="px-6 py-4 text-sm text-gray-400">{blog.date}</td>
               <td className="px-6 py-4">
                 <div className="flex items-center gap-3 text-sm">
@@ -1290,6 +1585,70 @@ const renderBlogs = () => (
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto bg-black/20">
         <div className="max-w-screen-2xl mx-auto p-6 md:p-8">
+          {fetchError === 'auth' && (
+            <div className="mb-4 p-4 rounded-lg bg-yellow-600/10 text-yellow-300 border border-yellow-600/20 flex items-center justify-between">
+              <div>
+                <strong className="font-semibold">Admin authorization required</strong>
+                <div className="text-sm text-yellow-300/70">Sign in as an admin account to view and manage real data.</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => { window.location.href = '/admin-login'; }} className="px-3 py-1 rounded bg-yellow-600 text-black font-semibold">Sign in</button>
+                <button onClick={() => fetchAllData()} className="px-3 py-1 rounded bg-white/10 text-white">Retry</button>
+                {/* Dev helper: create admin quickly if backend is local and no admin exists */}
+                <button onClick={async () => {
+                  try {
+                    const resp = await fetch(`${API_BASE_URL.replace('/api', '')}/api/auth/debug/seed-admin`, { method: 'POST' });
+                    const json = await resp.json();
+                    if (json && (json.token || json.data)) {
+                      // if token provided auto-login
+                      if (json.token) {
+                        localStorage.setItem('token', json.token);
+                        localStorage.setItem('user', JSON.stringify({ email: json.data?.email || 'admin', role: 'admin' }));
+                        toast.success('Dev admin created and signed in');
+                        fetchAllData();
+                        return;
+                      }
+                    }
+                    toast.success('Dev admin created — please sign in');
+                  } catch (e) {
+                    toast.error('Failed to create dev admin');
+                  }
+                }} className="px-3 py-1 rounded bg-white/10 text-white">Create dev admin</button>
+              </div>
+            </div>
+          )}
+          {fetchError === 'failed' && (
+            <div className="mb-4 p-4 rounded-lg bg-red-600/10 text-red-300 border border-red-600/20 flex items-center justify-between">
+              <div>
+                <strong className="font-semibold">Failed to load live admin data</strong>
+                <div className="text-sm text-red-300/70">Check the backend server or your network. You can still use local (mock) UI while offline.</div>
+              </div>
+              <div>
+                <button onClick={() => fetchAllData()} className="px-3 py-1 rounded bg-white/10 text-white">Retry</button>
+              </div>
+            </div>
+          )}
+          {/* Debug info for dev */}
+          {(typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV) && fetchDebug?.lastPath && (
+            <div className="mb-4 p-3 rounded-lg bg-white/5 text-sm text-gray-300 border border-white/10">
+              <strong className="text-xs text-gray-400 mr-2">Debug:</strong>
+              <span className="mr-4">path: <code className="text-xs">{fetchDebug.lastPath}</code></span>
+              <span className="mr-4">status: <code className="text-xs">{fetchDebug.lastStatus}</code></span>
+              {fetchDebug.details && <span>details: <code className="text-xs">{fetchDebug.details}</code></span>}
+            </div>
+          )}
+          {/* Debug panel for admin fetch (visible in dev) */}
+          {fetchDebug.lastPath && (
+            <div className="mb-4 p-2 rounded-lg bg-white/5 text-sm text-gray-300 border border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <strong className="text-xs text-gray-200">Fetch:</strong>
+                <div className="text-xs text-gray-300">{fetchDebug.lastPath}</div>
+                <div className="text-xs text-gray-400">· {fetchDebug.lastStatus}</div>
+                {fetchDebug.details && <div className="text-xs text-gray-400">· {fetchDebug.details}</div>}
+              </div>
+              <div className="text-xs text-gray-400 italic">Dev debug</div>
+            </div>
+          )}
           {renderSection()}
         </div>
       </main>
@@ -1468,7 +1827,7 @@ const renderBlogs = () => (
           {modalType === "viewBlog" && selectedItem && (
   <div className="space-y-4 text-gray-300">
     <h3 className="text-2xl font-bold text-white">{selectedItem.title}</h3>
-    <p className="text-sm text-gray-400">By {selectedItem.author}</p>
+    <p className="text-sm text-gray-400">By {(typeof selectedItem.author === 'object' ? (selectedItem.author.fullName || selectedItem.author.name || selectedItem.author.email) : selectedItem.author) || 'Unknown'}</p>
     <p className="text-sm text-gray-500">Club: {selectedItem.club}</p>
     <p className="text-sm text-gray-500">Date: {selectedItem.date}</p>
 
