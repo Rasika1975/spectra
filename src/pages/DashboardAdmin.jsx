@@ -809,7 +809,7 @@ const DashboardAdmin = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {[
           { label: "Total Members", value: totalMembers, change: "+12%", icon: Users, color: "blue" },
           { label: "Total Clubs", value: totalClubs, change: "+5%", icon: Building2, color: "green" },
