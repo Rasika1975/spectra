@@ -34,6 +34,8 @@ import {
   LogOut,
 } from "lucide-react";
 
+import { toast } from 'react-hot-toast';
+
 const DashboardClub = () => {
   const [activeSection, setActiveSection] = useState("Dashboard");
   const [searchTerm, setSearchTerm] = useState("");
@@ -43,9 +45,7 @@ const DashboardClub = () => {
   const [itemToEdit, setItemToEdit] = useState(null);
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
-  // Members filters (moved to top-level so hooks are not used inside renderMembers)
-  const [cityFilter, setCityFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  // NOTE: Member management (approval/administration) moved to Admin — club UI keeps a read-only members list for event registrations.
 
   // Profile image upload helpers
   const [clubImageFile, setClubImageFile] = useState(null);
@@ -229,20 +229,11 @@ const DashboardClub = () => {
   const sidebarItems = [
     { name: "Dashboard", icon: LayoutDashboard },
     { name: "Profile", icon: Settings },
-    { name: "Members", icon: Users },
     { name: "Blogs", icon: FileText },
     { name: "Events", icon: Calendar },
     { name: "Contact", icon: Mail },
   ];
 
-  // Approve/Reject Member
-  const handleMemberAction = (memberId, action) => {
-    setMembers(
-      members.map((m) =>
-        m.id === memberId ? { ...m, status: action === "approve" ? "Active" : "Rejected" } : m
-      )
-    );
-  };
 
   // Delete Blog
   const deleteBlog = (blogId) => {
@@ -404,9 +395,7 @@ const DashboardClub = () => {
   };
 
   // Remove Member
-  const removeMember = (memberId) => {
-    setMembers(members.filter((m) => m.id !== memberId));
-  };
+  // Member deletions / approvals are now admin-only — club UI will not modify members.
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -627,202 +616,7 @@ const DashboardClub = () => {
     </form>
   );
 
-  // ======================== MEMBERS SECTION ========================
- // ======================== MEMBERS SECTION ========================
-const renderMembers = () => {
-  // You already have members state, searchTerm state, and handleMemberAction, removeMember handlers
-
-  // NOTE: filter state is at top-level (moved) so we don't use hooks inside renderMembers
-
-  // Get unique cities from members
-  const cities = [...new Set(members.map(m => m.college ? m.college.split(',').pop().trim() : 'Unknown'))].sort();
-
-  // Filtered members: by name, city and status
-  const filteredMembers = members.filter((m) => {
-    const nameMatch = m.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const cityMatch = cityFilter === 'all' || m.college.toLowerCase().includes(cityFilter.toLowerCase());
-    const statusMatch = statusFilter === 'all' || m.status.toLowerCase() === statusFilter.toLowerCase();
-    return nameMatch && cityMatch && statusMatch;
-  });
-
-  return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <h2 className="text-2xl font-bold text-white">Member Management</h2>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-              <input
-                type="text"
-                placeholder="Search members..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-600 bg-gray-800 text-white"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Filters Section */}
-        <div className="flex flex-wrap items-center gap-4 bg-white/5 p-4 rounded-xl">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-400">Filters:</span>
-          </div>
-          
-          {/* City Filter */}
-          <select
-            value={cityFilter}
-            onChange={(e) => setCityFilter(e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-violet-600 focus:outline-none"
-          >
-            <option value="all">All Cities</option>
-            {cities.map(city => (
-              <option key={city} value={city}>{city}</option>
-            ))}
-          </select>
-
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:ring-2 focus:ring-violet-600 focus:outline-none"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="pending">Pending</option>
-            <option value="rejected">Rejected</option>
-          </select>
-
-          {/* Results Counter */}
-          <div className="ml-auto text-sm text-gray-400">
-            {filteredMembers.length} member{filteredMembers.length !== 1 ? 's' : ''} found
-          </div>
-        </div>
-      </div>
-
-      {/* Pending Approvals Banner */}
-      {members.filter((m) => m.status === "Pending").length > 0 && (
-        <div className="bg-yellow-500/10 border-l-4 border-yellow-400 p-4 rounded-r-lg">
-          <p className="text-yellow-300 font-medium">
-            ⚠️ You have {members.filter((m) => m.status === "Pending").length} pending member approval(s)
-          </p>
-        </div>
-      )}
-
-      {/* Member Cards Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredMembers.map((member) => (
-          <div
-            key={member.id}
-            className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:-translate-y-1 transition-transform"
-          >
-            {/* Status bar */}
-            <div
-              className={`h-2 ${
-                member.status === "Active"
-                  ? "bg-green-600"
-                  : member.status === "Pending"
-                  ? "bg-yellow-600"
-                  : "bg-red-600"
-              }`}
-            />
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={member.avatar}
-                    alt={member.name}
-                    className="w-16 h-16 rounded-full"
-                  />
-                  <div>
-                    <h3 className="font-bold text-white">{member.name}</h3>
-                    <p className="text-sm text-gray-400">{member.college}</p>
-                  </div>
-                </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    member.status === "Active"
-                      ? "bg-green-500/20 text-green-300"
-                      : member.status === "Pending"
-                      ? "bg-yellow-500/20 text-yellow-300"
-                      : "bg-red-500/20 text-red-300"
-                  }`}
-                >
-                  {member.status}
-                </span>
-              </div>
-
-              <div className="space-y-2 text-sm mb-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Email:</span>
-                  <span className="font-medium">{member.email}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Phone:</span>
-                  <span className="font-medium">{member.phone}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Joined:</span>
-                  <span className="font-medium">{member.joinedDate}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Events:</span>
-                  <span className="font-medium">{member.eventsAttended}</span>
-                </div>
-              </div>
-              
-              {/* Member Actions */}
-              {member.status === "Pending" ? (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleMemberAction(member.id, "approve")}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleMemberAction(member.id, "reject")}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    Reject
-                  </button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setSelectedItem(member);
-                      setModalType("viewMember");
-                      setShowModal(true);
-                    }}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
-                  >
-                    <Eye className="w-4 h-4" />
-                    View Details
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedItem(member);
-                      setModalType("confirmDelete");
-                      setShowModal(true);
-                    }}
-                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+  // Member management intentionally removed — members are owned/managed by Admin.
 
 
   // ======================== BLOGS SECTION ========================
@@ -1005,8 +799,7 @@ const renderMembers = () => {
         return renderDashboard();
       case "Profile":
         return renderProfile();
-      case "Members":
-        return renderMembers();
+      // Members section removed (admin-only)
       case "Blogs":
         return renderBlogs();
       case "Events":
@@ -1062,8 +855,9 @@ const renderMembers = () => {
               </button>
               <button
                 onClick={() => {
-                  if (selectedItem?.college) { // Heuristic to check if it's a member
-                    removeMember(selectedItem.id);
+                  // Prevent clubs from removing or approving members here — admin-only.
+                  if (selectedItem?.college) {
+                    toast.error('Member management is restricted to Admins');
                   } else if (selectedItem?.content) { // Heuristic for blog
                     deleteBlog(selectedItem.id);
                   } else { // Assume event
@@ -1256,34 +1050,7 @@ const renderMembers = () => {
         </div>
       )}
 
-      {/* View Member Modal */}
-      {showModal && modalType === "viewMember" && selectedItem && (
-        <div className="fixed inset-0 bg-black/60 flex items-start justify-center z-50 p-4 pt-20">
-          <div className="bg-gray-900/80 backdrop-blur-lg border border-white/10 rounded-2xl max-w-lg w-full">
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
-              <h3 className="text-xl font-bold text-white">Member Details</h3>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-white/10 rounded-full">
-                <XCircle className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-4">
-                <img src={selectedItem.avatar} alt={selectedItem.name} className="w-20 h-20 rounded-full" />
-                <div>
-                  <h4 className="text-xl font-bold text-white">{selectedItem.name}</h4>
-                  <p className="text-gray-400">{selectedItem.college}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10 text-sm">
-                <div><p className="text-gray-400">Email</p><p>{selectedItem.email}</p></div>
-                <div><p className="text-gray-400">Phone</p><p>{selectedItem.phone}</p></div>
-                <div><p className="text-gray-400">Joined On</p><p>{selectedItem.joinedDate}</p></div>
-                <div><p className="text-gray-400">Events Attended</p><p>{selectedItem.eventsAttended}</p></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* View Member Modal removed - member management handled by admins only */}
 
       {/* View Blog Modal */}
       {showModal && modalType === "viewBlog" && selectedItem && (
