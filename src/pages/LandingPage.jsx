@@ -19,7 +19,7 @@ import {
   Trophy,
   Shield,
   Zap,
-  ArrowRight as ArrowRightIcon,
+  ArrowRight,
 } from "lucide-react";
 
 // Reusable Club Card Component
@@ -40,12 +40,13 @@ const ClubCard = ({ club }) => (
       <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {club.events}</span>
       <span className="flex items-center gap-1"><Image className="w-3 h-3" /> {club.blogs}</span>
     </div>
-    <Link
-      to={`/clubs/${club.id}`}
-      className="mt-4 block w-full text-center bg-gradient-to-r from-cyan-600/50 to-violet-600/50 text-white py-2 rounded-lg hover:from-cyan-600 hover:to-violet-600 hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300"
+    <button
+      type="button"
+      disabled
+      className="mt-4 block w-full text-center bg-gradient-to-r from-cyan-600/50 to-violet-600/50 text-white py-2 rounded-lg opacity-50 cursor-not-allowed transition-all duration-300"
     >
       View Details
-    </Link>
+    </button>
   </div>
 );
 
@@ -91,6 +92,22 @@ export default function LandingPage() {
     });
     return () => timers.forEach(clearInterval);
   }, []);
+
+  const handleNavClick = (e, targetId) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false); // Close mobile menu if open
+    const targetElement = document.querySelector(targetId);
+    if (targetElement) {
+      const offset = 80; // Account for fixed navbar height
+      const elementPosition = targetElement.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const navLinks = [
     { name: "Features", href: "#features" },
@@ -192,6 +209,11 @@ export default function LandingPage() {
   };
   const currentYear = new Date().getFullYear();
 
+  const handleNewsletterSubmit = (e) => {
+    e.preventDefault();
+    alert('Thank you for subscribing to our newsletter!');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -224,7 +246,8 @@ export default function LandingPage() {
               {navLinks.map((link) => (
                 <a
                   key={link.name}
-                  href={link.href} // This should be updated to use Link for internal navigation
+                  href={link.href}
+                  onClick={(e) => handleNavClick(e, link.href)}
                   className="text-gray-300 hover:text-cyan-400 relative group transition-colors duration-300"
                 >
                   {link.name}
@@ -249,8 +272,8 @@ export default function LandingPage() {
               {navLinks.map((link) => (
                 <a
                   key={link.name}
-                  href={link.href} // This should be updated to use Link for internal navigation
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  href={link.href}
+                  onClick={(e) => handleNavClick(e, link.href)}
                   className="block text-gray-300 hover:text-cyan-400 text-lg transition-colors"
                 >
                   {link.name}
@@ -376,7 +399,7 @@ export default function LandingPage() {
             ))}
           </div>
           <Link to="/signup" className="inline-flex items-center bg-gradient-to-r from-cyan-600 to-violet-600 text-white px-10 py-5 rounded-full font-bold text-lg hover:scale-105 hover:shadow-2xl hover:shadow-cyan-500/40 transition-all" >
-            Start Your Journey <ArrowRightIcon className="inline ml-2" />
+            Start Your Journey <ArrowRight className="inline ml-2" />
           </Link>
         </div>
       </section>
@@ -410,7 +433,15 @@ export default function LandingPage() {
               Quick Links
             </h4>
             <ul className="space-y-4 text-sm">
-              <li><a href="#features" className="hover:text-cyan-400 hover:pl-2 transition-all duration-300">Features</a></li>
+              <li>
+                <a 
+                  href="#features" 
+                  onClick={(e) => handleNavClick(e, '#features')}
+                  className="hover:text-cyan-400 hover:pl-2 transition-all duration-300 cursor-pointer"
+                >
+                  Features
+                </a>
+              </li>
               <li><Link to="/signup" className="hover:text-cyan-400 hover:pl-2 transition-all duration-300">Join Now</Link></li>
             </ul>
           </div>
@@ -436,19 +467,20 @@ export default function LandingPage() {
             <p className="text-sm mb-4">
               Stay updated with our latest news and features.
             </p>
-            <form className="flex">
+            <div className="flex">
               <input
                 type="email"
                 placeholder="Enter your email"
                 className="w-full px-4 py-3 border border-r-0 border-cyan-500/30 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-black/60 text-white placeholder-gray-500 backdrop-blur-xl"
               />
               <button
-                type="submit"
+                type="button"
+                onClick={handleNewsletterSubmit}
                 className="bg-gradient-to-r from-cyan-600 to-violet-600 px-4 py-3 rounded-r-lg text-white font-bold hover:from-cyan-500 hover:to-violet-500 transition-all"
               >
-                <ArrowRightIcon className="w-5 h-5" />
+                <ArrowRight className="w-5 h-5" />
               </button>
-            </form>
+            </div>
           </div>
         </div>
         
