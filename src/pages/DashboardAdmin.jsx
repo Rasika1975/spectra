@@ -1778,13 +1778,21 @@ const renderBlogs = () => (
                 <div className="md:col-span-2">
                   <p className="text-sm text-gray-400 mb-2">Joined Clubs</p>
                   <div className="flex flex-wrap gap-2">
-                    {selectedItem.joinedClubs?.length > 0 ? selectedItem.joinedClubs.map(club => <span key={club} className="bg-cyan-500/20 text-cyan-300 text-xs px-2 py-1 rounded-full">{club}</span>) : <p className="text-sm">No clubs joined.</p>}
+                    {selectedItem.joinedClubs?.length > 0 ? selectedItem.joinedClubs.map((club, idx) => {
+                      const key = (club && (club._id || club.id)) || `club-${idx}`;
+                      const label = typeof club === 'object' ? (club.name || club.fullName || club.clubName || String(club._id || club.id || '')) : club;
+                      return <span key={key} className="bg-cyan-500/20 text-cyan-300 text-xs px-2 py-1 rounded-full">{label}</span>
+                    }) : <p className="text-sm">No clubs joined.</p>}
                   </div>
-                </div>
+                  </div>
                 <div className="md:col-span-2">
                   <p className="text-sm text-gray-400 mb-2">Joined Events</p>
                   <div className="flex flex-wrap gap-2">
-                    {selectedItem.joinedEvents?.length > 0 ? selectedItem.joinedEvents.map(event => <span key={event} className="bg-violet-500/20 text-violet-300 text-xs px-2 py-1 rounded-full">{event}</span>) : <p className="text-sm">No events joined.</p>}
+                    {selectedItem.joinedEvents?.length > 0 ? selectedItem.joinedEvents.map((ev, idx) => {
+                      const key = (ev && (ev._id || ev.id)) || `event-${idx}`;
+                      const label = typeof ev === 'object' ? (ev.title || ev.name || String(ev._id || ev.id || '')) : ev;
+                      return <span key={key} className="bg-violet-500/20 text-violet-300 text-xs px-2 py-1 rounded-full">{label}</span>
+                    }) : <p className="text-sm">No events joined.</p>}
                   </div>
                 </div>
               </div>
